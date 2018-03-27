@@ -166,6 +166,7 @@ Also as stated above in case there has been a rollback failure then a mail will 
 
 ## 3. Limitation and upgrade
 
+Current design of the tool doesnot support non Unix agent upgrade. Thus currently tool doesnot support Windows agent upgrade. In future may be additional component can handle this limitation.
 
 ## 4. Support and managebility
 
