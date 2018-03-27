@@ -105,7 +105,9 @@ Note: All above operation need root priviledge on the tool host.
 
 ## 2. Tool technical overview
 
+The tool is build to migrate your ControlM agents from a centralised server. Thus what you do is to install this tool in a central server. Thus 
 
+Note here its of prime importance to place your central server in a host where it can reach out to all your Agent hosts via SSH, while Agent host can reach your central server via HTTP. This is required because the tool connects to agent hosts via SSH and trigger migration task. While central server orders the action the agent hosts download the binaries required for the migration from the central server via HTTP.
 
 ### 2.1. Tool Directory layout
 
