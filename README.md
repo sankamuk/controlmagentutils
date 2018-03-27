@@ -73,7 +73,16 @@ The tool has a extremely simple install process. It comprosed of three steps to 
         chmod a+rx /var/www/html/ctmagent/install.sh
         
         
-3. Configure the tool for a specific migration case bu running the install.sh.
+3. Configure the tool for a specific migration case by running the install.sh.
+        
+        The installation setup actually lay down a skeleton for tool, from here on you should use the tool to create a miragtion scenario where you give the tool data about the next migration that you want to perform using the tool. Migration setup is build by runnning a install.sh script, this script gather details about your next planned migration and the data that is required for the same based on the information provided the tool setup and install the component for the migration you planned next.
+        The below execution trail shown below shows one such migration setup, note few important points below.
+        - You should upload the installation binary to the tool host from BMC and made available to the tool to set the same.
+        - In case if you do not have binary available for any perticular flavour, please create dummy file to be provided to the script. But note in case script detects any of your host of that flavour the patch will obviously as expected to fail.
+        
+        Dummy walk through of the setup process:
+        
+        
 
 
 Note: All above operation need root priviledge on the tool host. 
