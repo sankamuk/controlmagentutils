@@ -139,7 +139,7 @@ Sample host file
 
 Once host file is created you are ready to execute a perticular migration scenario. Shown below is a sample execution.
 
-<img src="images/Execution.jpg" height="200">
+<img src="images/Execution.jpg" height="300">
 
 
 Note above have shown a generic execution script not creating any perticular migration scenario thus the script has generic name but you will always execute a script of a specific scenario.
@@ -147,6 +147,22 @@ Note above have shown a generic execution script not creating any perticular mig
 
 ### 2.2. Troubleshooting
 
+The tool is build to be enterprise grade thus has audit and tracking support. The log directory created for a spcific migration scenario  has two type of file.
+
+- Debug log file for perticular host, this is logged by the driver and send to the central host server via SSH. (name: ctmagent_upgrade_trace_[DATE].log)
+
+- Trace log file which contains the trace/track of status of each host migration logged by the main migration executor. (name: ctmagent_upgrade_[HOSTNAME]_[DATE].log)
+
+- Note the debug log of the main migration executor is send in the Systemout of the executor script which if requires you can redirect to any log file. (shown above in the execution demo)
+
+
+Also once the main executor completes migrating all host it will reports the overall status via mail.
+
+
+<img src="images/Notification.jpg" height="300">
+
+
+Also as stated above in case there has been a rollback failure then a mail will be triggered for immediate recovery of the host by a ControlM host administrator.
 
 ## 3. Limitation and upgrade
 
