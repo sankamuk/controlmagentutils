@@ -88,6 +88,10 @@ run_action_on_host(){
        sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "/opt/perl/bin/lwp-download http://${bin_host}/${download_home}/hpux/upgrade.sh ~/upgrade.sh"
        dwn_exec_stat=$?
        ;;
+     AIX)
+       sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "/usr/opt/perl5/bin/lwp-download http://${bin_host}/${download_home}/hpux/upgrade.sh ~/upgrade.sh"
+       dwn_exec_stat=$?
+       ;;
      esac
      if [ $dwn_exec_stat -ne 0 ] ; then
          echo "[`date`] ERROR - Unable to download upgrade script in agent host."

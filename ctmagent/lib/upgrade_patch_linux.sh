@@ -456,7 +456,7 @@ upgrade_bin_hsh=@@@UPGRADE_BINARY_HASH@@@
 patch_bin=@@@PATCH_BINARY@@@
 patch_bin_hsh=@@@PATCH_BINARY_HASH@@@
 upgrade_optn_fl=upgrade.xml
-upgrade_optn_fl_hsh=1994684972
+upgrade_optn_fl_hsh=@@@OPTION_FILE_HASH@@@
 download_home="ctmagent/@@@BINARY_HOME@@@/linux"
 
 upgrade_final_verion=@@@UPGRADE_VERSION@@@

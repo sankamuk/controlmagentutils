@@ -1,6 +1,6 @@
 #!/bin/sh -x
 #==================================================================================================================================
-# Usage  : Script to patch controlM agent. Platfom: HP-UX
+# Usage  : Script to patch controlM agent. Platfom: AIX
 # Version: 1.0
 # Date   : 21-03-2018
 # Author : Sankar Mukherjee
@@ -457,14 +457,14 @@ patch_bin=@@@PATCH_BINARY@@@
 patch_bin_hsh=@@@PATCH_BINARY_HASH@@@
 upgrade_optn_fl=upgrade.xml
 upgrade_optn_fl_hsh=@@@OPTION_FILE_HASH@@@
-download_home="ctmagent/@@@BINARY_HOME@@@/hpux"
+download_home="ctmagent/@@@BINARY_HOME@@@/aix"
 
 upgrade_final_verion=@@@UPGRADE_VERSION@@@
 patch_final_verion=@@@PATCH_VERSION@@@
 
 my_home=`echo $HOME`
 min_space=@@@MINIMUM_FS_SPACE@@@
-download_exe=/opt/perl/bin/lwp-download
+download_exe=/usr/opt/perl5/bin/lwp-download
 agnt_home=`find_agent_home`
 
 if [ ! -d ${agnt_home}/ctm ]
@@ -486,7 +486,7 @@ case ${todo} in
 		# Updating agent
 		agent_upgrade
 		# Patch agent
-		#agent_patch
+		agent_patch
 		# Starting up agent
 		start_agent
 		;;
