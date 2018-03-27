@@ -83,7 +83,7 @@ The below execution trail shown below shows one such migration setup, note few i
         
 Dummy walk through of the setup process:
 
-<img src="images/SetUp.jpg" height="100">
+<img src="images/SetUp.jpg" height="300">
         
 Just to make you understand what all have been done lets view the directory structures along with files created with the setup process.
 
@@ -93,7 +93,7 @@ Before setup process:
 
 After setup process:
 
-<img src="images/Home_After.jpg" height="100">
+<img src="images/Home_After.jpg" height="200">
 
 
 As you see the below components are created:
