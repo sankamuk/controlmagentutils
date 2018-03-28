@@ -48,6 +48,7 @@ Below are the basic advantages that the tool has:
         5. Tool follows a inbuild rollback mechanism incase failure in upgrade.
         
         6. No worry of unsuccessful upgrade/patch leave agent binary corrupted, tool raises immediate alert in case upgrade/rollback failure.
+        
         7. All audit and logs visible and sharable via HTTP Interface thus easy access for the same.
         
 
