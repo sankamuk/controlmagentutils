@@ -170,14 +170,14 @@ cat ${host_file} | while read host_name
 do
 	echo "[`date`] Starting to work with host $host_name."
 	hst_log_file=${log_home}/ctmagent_upgrade_${host_name}_${today_dt}.log
-	echo "[`date`] Checking setup with user - ctmhp7."
-        os_type=`sshpass -p "ctmagent" ssh -o StrictHostKeyChecking=no ctmhp7@${host_name} "uname"`
+	echo "[`date`] Checking setup with user - _@@@CTM_USER_NM@@@_."
+        os_type=`sshpass -p "@@@CTM_USER_PASSWD@@@" ssh -o StrictHostKeyChecking=no _@@@CTM_USER_NM@@@_@${host_name} "uname"`
 	if [ $? -eq 0 ] ; then
-		echo "[`date`] Successfully tested host access. Executing upgrade action on $os_type host "$host_name" with user ctmhp7."
-		run_action_on_host "$os_type" "$host_name" "ctmhp7" "ctmagent" > ${hst_log_file} 2>&1
+		echo "[`date`] Successfully tested host access. Executing upgrade action on $os_type host "$host_name" with user _@@@CTM_USER_NM@@@_."
+		run_action_on_host "$os_type" "$host_name" "_@@@CTM_USER_NM@@@_" "@@@CTM_USER_PASSWD@@@" > ${hst_log_file} 2>&1
 		echo "[`date`] Completed action."
 	fi
-	echo "[`date`] Completed working with user - ctmhp7."
+	echo "[`date`] Completed working with user - _@@@CTM_USER_NM@@@_."
 	echo "[`date`] Completed working with host $host_name."
 done		
 echo "</table></body></html>" >> ${exec_trace}
