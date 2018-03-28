@@ -44,11 +44,17 @@ if [ "$is_patch" == "Y" -o "$is_patch" == "y" ] ; then
         [ ! -f $patch_bin_aix ] && ( echo "ERROR: Binary not accessable."; exit 1 )
         patch_bin_aix_hash=$(cksum $patch_bin_aix | awk '{ print $1 }')
 	read -p "Please provide the patch version id(This string will be searched in version to validate patching): " patch_id
-	activity_id="V${upgrad_id}_P${patch_id}"
+	activity_id="V${upgrad_id}P${patch_id}U${ctm_user}"
 else
-	activity_id="V${upgrad_id}"
+	activity_id="V${upgrad_id}U${ctm_user}"
 fi
 echo "Thanks for the input, kindly wait for the script to prepare the setup."
+
+if [ -d ${script_home}/${activity_id} -o -f ${script_home}/run_upgrade_${activity_id}.sh ] ; then
+	echo "ERROR: There is already a migration scenario created for the same. Thus quiting setup!!!"
+	exit 1
+fi
+
 mkdir -p ${script_home}/log/${activity_id}
 mkdir -p ${script_home}/${activity_id}
 mkdir -p ${script_home}/${activity_id}/linux/
@@ -111,8 +117,11 @@ sed -i 's/@@@OPTION_FILE_HASH@@@/'${optn_file_hash}'/g' ${script_home}/${activit
 sed -i 's/@@@OPTION_FILE_HASH@@@/'${optn_file_hash}'/g' ${script_home}/${activity_id}/aix/upgrade.sh
 chown -R apache:apache ${script_home}/${activity_id}/
 chown apache:apache run_upgrade_${activity_id}.sh
+chown -R apache:apache ${script_home}/log
 chown -R apache:apache ${script_home}/log/${activity_id}
 chmod a+rx run_upgrade_${activity_id}.sh
+chmod a+rx ${script_home}/log
+chmod a+rx ${script_home}/log/${activity_id}
 
 echo ""
 echo "Good news, we have successfully created the setup for upgrading ControlM Agent from Version $cur_vern. Below are detail."
