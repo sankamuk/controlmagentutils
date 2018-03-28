@@ -175,12 +175,16 @@ do
 	if [ $? -eq 0 ] ; then
 		echo "[`date`] Successfully tested host access. Executing upgrade action on $os_type host "$host_name" with user _@@@CTM_USER_NM@@@_."
 		run_action_on_host "$os_type" "$host_name" "_@@@CTM_USER_NM@@@_" "@@@CTM_USER_PASSWD@@@" > ${hst_log_file} 2>&1
+		chmod a+r ${hst_log_file}
 		echo "[`date`] Completed action."
+	else
+                echo "[`date`] ERROR - Unable to connect to host "$host_name" with user _@@@CTM_USER_NM@@@_."
+		echo "<tr><td>${host_name}</td><td>Unknown</td><td>_@@@CTM_USER_NM@@@_</td><td>Connection Issue</td></tr>" >> ${exec_trace}
 	fi
-	echo "[`date`] Completed working with user - _@@@CTM_USER_NM@@@_."
-	echo "[`date`] Completed working with host $host_name."
+	echo "[`date`] Completed working with user _@@@CTM_USER_NM@@@_ on host $host_name."
 done		
 echo "</table></body></html>" >> ${exec_trace}
+chmod a+r ${exec_trace}
  
 ## Send report
 mail_report "REPORT" ${exec_trace}
