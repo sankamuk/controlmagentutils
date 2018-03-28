@@ -16,6 +16,8 @@ echo ""
 
 read -p "Please provide the contact email id for admin: " email_id
 read -p "Please provide the expected minumum space required for this upgrade: " fs_req
+read -p "Please provide the user to connect to agent hosts: " ctm_user
+read -p "Please provide the user's password to connect to agent hosts: " ctm_usr_passwd
 read -p "Please provide the current version: " cur_vern
 read -p "Please provide the upgraded version id(This string will be searched in version to validate upgradation): " upgrad_id
 read -p "Please provide the HP Unix Upgrade binary location(Should be uploaded in this host): " upgd_bin_hp
@@ -78,6 +80,8 @@ else
         cp lib/upgrade_aix.sh ${script_home}/${activity_id}/aix/upgrade.sh
 fi
 
+sed -i 's/_@@@CTM_USER_NM@@@_/'${ctm_user}'/g' run_upgrade_${activity_id}.sh
+sed -i 's/@@@CTM_USER_PASSWD@@@/'${ctm_usr_passwd}'/g' run_upgrade_${activity_id}.sh
 sed -i 's/@@@BINARY_HOME@@@/'${activity_id}'/g' run_upgrade_${activity_id}.sh
 sed -i 's/@@@BINARY_HOME@@@/'${activity_id}'/g' ${script_home}/${activity_id}/hpux/upgrade.sh
 sed -i 's/@@@BINARY_HOME@@@/'${activity_id}'/g' ${script_home}/${activity_id}/linux/upgrade.sh
