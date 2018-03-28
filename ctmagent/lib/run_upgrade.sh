@@ -154,7 +154,7 @@ email_id=@@@EMAIL_ID@@@
 today_dt=$(date +%F-%H-%M)
 script_home=$(cd $(dirname $0);pwd)
 script_name=$(basename "$0")
-activity_id=$(echo $script_name | awk -F"_" '{ print $2 }' | awk -F"." '{ print $1 }')
+activity_id=$(echo $script_name | awk -F"_" '{ print $3 }' | awk -F"." '{ print $1 }')
 log_home="${script_home}/log/${activity_id}"
 [ -d ${log_home} ] && mkdir -p ${log_home}
 exec_trace=${log_home}/ctmagent_upgrade_trace_${today_dt}.log
