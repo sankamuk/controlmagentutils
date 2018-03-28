@@ -75,7 +75,7 @@ The tool has a extremely simple install process. It comprosed of three steps to 
         chmod a+rx /var/www/html/ctmagent/install.sh
         
         
-3. Configure the tool for a specific migration case by running the install.sh.
+3. Configure the tool for a specific migration scenario by running the install.sh.
         
 The installation setup actually lay down a skeleton for tool, from here on you should use the tool to create a miragtion scenario where you give the tool data about the next migration that you want to perform using the tool. Migration setup is build by runnning a install.sh script, this script gather details about your next planned migration and the data that is required for the same based on the information provided the tool setup and install the component for the migration you planned next.
 
