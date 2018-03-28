@@ -48,6 +48,7 @@ Below are the basic advantages that the tool has:
         5. Tool follows a inbuild rollback mechanism incase failure in upgrade.
         
         6. No worry of unsuccessful upgrade/patch leave agent binary corrupted, tool raises immediate alert in case upgrade/rollback failure.
+        7. All audit and logs visible and sharable via HTTP Interface thus easy access for the same.
         
 
 ### 1.3. Quick Installation
@@ -156,6 +157,8 @@ The tool is build to be enterprise grade thus has audit and tracking support. Th
 - Note the debug log of the main migration executor is send in the Systemout of the executor script which if requires you can redirect to any log file. (shown above in the execution demo)
 
 - Also as stated above in case there has been a rollback failure then a mail will be triggered for immediate recovery of the host by a ControlM host administrator.
+
+- Again one great feature is the complete log for troubleshooting is available via HTTP interface from your central control host from here your tool is running, just point yout browser to **http://<TOOL_HOST>/ctmagent/log/** you will get a list of folders corresponding to each migration scenario and in each folder you will be able to view all logs for that scenario execution.
 
 
 Also once the main executor completes migrating all host it will reports the overall status via mail.
