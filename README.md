@@ -155,6 +155,8 @@ The tool is build to be enterprise grade thus has audit and tracking support. Th
 
 - Note the debug log of the main migration executor is send in the Systemout of the executor script which if requires you can redirect to any log file. (shown above in the execution demo)
 
+- Also as stated above in case there has been a rollback failure then a mail will be triggered for immediate recovery of the host by a ControlM host administrator.
+
 
 Also once the main executor completes migrating all host it will reports the overall status via mail.
 
@@ -162,7 +164,6 @@ Also once the main executor completes migrating all host it will reports the ove
 <img src="images/Notification.jpg" height="300">
 
 
-Also as stated above in case there has been a rollback failure then a mail will be triggered for immediate recovery of the host by a ControlM host administrator.
 
 ## 3. Limitation and upgrade
 
