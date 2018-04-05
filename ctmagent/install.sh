@@ -32,6 +32,13 @@ upgd_bin_hp_hash=$(cksum $upgd_bin_hp | awk '{ print $1 }')
 upgd_bin_lnx_hash=$(cksum $upgd_bin_lnx | awk '{ print $1 }')
 upgd_bin_aix_hash=$(cksum $upgd_bin_aix | awk '{ print $1 }')
 optn_file_hash=$(cksum $optn_file | awk '{ print $1 }')
+read -p "Do you want to upgrade Agent protocol version(Y/n): " is_proto
+if [ "$is_proto" == "Y" -o "$is_proto" == "y" ] ; then
+	is_proto_value=0
+	read -p "Please provide the protocol version to set after upgrade: " final_proto_ver
+else
+	is_proto_value=1
+fi
 read -p "Do you want to patch after upgrade(Y/n): " is_patch
 if [ "$is_patch" == "Y" -o "$is_patch" == "y" ] ; then
 	read -p "Please provide the HP Unix patch binary location(Should be uploaded in this host): " patch_bin_hp
@@ -67,6 +74,7 @@ cp ${optn_file} ${script_home}/${activity_id}/aix/upgrade.xml
 cp $upgd_bin_hp ${script_home}/${activity_id}/hpux/
 cp $upgd_bin_lnx ${script_home}/${activity_id}/linux/
 cp $upgd_bin_aix ${script_home}/${activity_id}/aix/
+
 if [ "$is_patch" == "Y" -o "$is_patch" == "y" ] ; then
 	cp lib/upgrade_patch_hpux.sh ${script_home}/${activity_id}/hpux/upgrade.sh
 	cp lib/upgrade_patch_linux.sh ${script_home}/${activity_id}/linux/upgrade.sh
@@ -84,6 +92,19 @@ else
 	cp lib/upgrade_hpux.sh ${script_home}/${activity_id}/hpux/upgrade.sh
 	cp lib/upgrade_linux.sh ${script_home}/${activity_id}/linux/upgrade.sh
         cp lib/upgrade_aix.sh ${script_home}/${activity_id}/aix/upgrade.sh
+fi
+
+if [ $is_proto_value -eq 0 ] ; then
+        sed -i 's/@@@IS_PROTOCOL_UPGRADE_REQUIRE@@@/0/g' ${script_home}/${activity_id}/hpux/upgrade.sh
+        sed -i 's/@@@IS_PROTOCOL_UPGRADE_REQUIRE@@@/0/g' ${script_home}/${activity_id}/linux/upgrade.sh
+        sed -i 's/@@@IS_PROTOCOL_UPGRADE_REQUIRE@@@/0/g' ${script_home}/${activity_id}/aix/upgrade.sh
+        sed -i 's/@@@FINAL_PROTOCOL_VERSION@@@/'${final_proto_ver}'/g' ${script_home}/${activity_id}/hpux/upgrade.sh
+        sed -i 's/@@@FINAL_PROTOCOL_VERSION@@@/'${final_proto_ver}'/g'  ${script_home}/${activity_id}/linux/upgrade.sh
+        sed -i 's/@@@FINAL_PROTOCOL_VERSION@@@/'${final_proto_ver}'/g'  ${script_home}/${activity_id}/aix/upgrade.sh
+else
+        sed -i 's/@@@IS_PROTOCOL_UPGRADE_REQUIRE@@@/1/g' ${script_home}/${activity_id}/hpux/upgrade.sh
+        sed -i 's/@@@IS_PROTOCOL_UPGRADE_REQUIRE@@@/1/g' ${script_home}/${activity_id}/linux/upgrade.sh
+        sed -i 's/@@@IS_PROTOCOL_UPGRADE_REQUIRE@@@/1/g' ${script_home}/${activity_id}/aix/upgrade.sh
 fi
 
 sed -i 's/_@@@CTM_USER_NM@@@_/'${ctm_user}'/g' run_upgrade_${activity_id}.sh

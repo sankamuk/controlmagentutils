@@ -110,14 +110,20 @@ run_action_on_host(){
                echo "[`date`] ERROR - Rollback happened successfully. Agent currently running."
                echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td></tr>" >> ${exec_trace}
              else
-               sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "~/upgrade.sh rollback_agent ${agnt_cntl_host} ${run_user} ${run_as}"
-               if [ $? -ne 0 ] ; then
-                 echo "[`date`] ERROR - Rollback unsuccessfull. Raising concerned as agent state unstable."
-                 echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Critical Failure</td></tr>" >> ${exec_trace}
-                 mail_report "ALERT" "${host_nm}@@@${run_user}"
-               else
+               sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "~/upgrade.sh start_agent ${agnt_cntl_host} ${run_user} ${run_as}"
+               if [ $? -eq 0 ] ; then
                  echo "[`date`] ERROR - Rollback happened successfully. Agent currently running."
                  echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td></tr>" >> ${exec_trace}
+               else
+                 sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "~/upgrade.sh rollback_agent ${agnt_cntl_host} ${run_user} ${run_as}"
+                 if [ $? -ne 0 ] ; then
+                   echo "[`date`] ERROR - Rollback unsuccessfull. Raising concerned as agent state unstable."
+                   echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Critical Failure</td></tr>" >> ${exec_trace}
+                   mail_report "ALERT" "${host_nm}@@@${run_user}"
+                 else
+                   echo "[`date`] ERROR - Rollback happened successfully. Agent currently running."
+                   echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td></tr>" >> ${exec_trace}
+                 fi
                fi
              fi
            else
@@ -151,13 +157,16 @@ bin_host=$(hostname)
 download_home="ctmagent/@@@BINARY_HOME@@@"
 curnt_version="@@@CURRENT_VERSION@@@"
 email_id=@@@EMAIL_ID@@@
+my_pid=$$
 today_dt=$(date +%F-%H-%M)
 script_home=$(cd $(dirname $0);pwd)
 script_name=$(basename "$0")
 activity_id=$(echo $script_name | awk -F"_" '{ print $3 }' | awk -F"." '{ print $1 }')
 log_home="${script_home}/log/${activity_id}"
 [ -d ${log_home} ] && mkdir -p ${log_home}
-exec_trace=${log_home}/ctmagent_upgrade_trace_${today_dt}.log
+exec_trace=${log_home}/ctmagent_upgrade_trace_${my_pid}_${today_dt}.log
+echo "[`date`] [${my_pid}] HOST_FILE_PASSED=${host_file}"
+echo "[`date`] [${my_pid}] EMAIL_ID=${email_id}"
 
 ## Notification setup
 echo "<html><body><h1><center>ControlM Upgrade Tool</center></h1><br><br>" >> ${exec_trace}
@@ -166,22 +175,22 @@ echo "<table style="width:80%"  border="1" align="center"><tr bgcolor="BBF1FA">"
 echo "<th>Host</th><th>OS</th><th>User</th><th>Upgrade Status</th></tr>" >> ${exec_trace}
 
 ## Execute upgrade from host file
-cat ${host_file} | while read host_name
+for host_name in $(cat ${host_file})
 do
-	echo "[`date`] Starting to work with host $host_name."
-	hst_log_file=${log_home}/ctmagent_upgrade_${host_name}_${today_dt}.log
-	echo "[`date`] Checking setup with user - _@@@CTM_USER_NM@@@_."
+	echo "[`date`] [${my_pid}] Starting to work with host -$host_name."
+	hst_log_file=${log_home}/ctmagent_upgrade_${my_pid}_${host_name}_${today_dt}.log
+	echo "[`date`] [${my_pid}] Checking setup with user - _@@@CTM_USER_NM@@@_."
         os_type=`sshpass -p "@@@CTM_USER_PASSWD@@@" ssh -o StrictHostKeyChecking=no _@@@CTM_USER_NM@@@_@${host_name} "uname"`
 	if [ $? -eq 0 ] ; then
-		echo "[`date`] Successfully tested host access. Executing upgrade action on $os_type host "$host_name" with user _@@@CTM_USER_NM@@@_."
+		echo "[`date`] [${my_pid}] Successfully tested host access. Executing upgrade action on $os_type host "$host_name" with user _@@@CTM_USER_NM@@@_."
 		run_action_on_host "$os_type" "$host_name" "_@@@CTM_USER_NM@@@_" "@@@CTM_USER_PASSWD@@@" > ${hst_log_file} 2>&1
 		chmod a+r ${hst_log_file}
-		echo "[`date`] Completed action."
+		echo "[`date`] [${my_pid}] Completed action."
 	else
-                echo "[`date`] ERROR - Unable to connect to host "$host_name" with user _@@@CTM_USER_NM@@@_."
+                echo "[`date`] [${my_pid}] ERROR - Unable to connect to host "$host_name" with user _@@@CTM_USER_NM@@@_."
 		echo "<tr><td>${host_name}</td><td>Unknown</td><td>_@@@CTM_USER_NM@@@_</td><td>Connection Issue</td></tr>" >> ${exec_trace}
 	fi
-	echo "[`date`] Completed working with user _@@@CTM_USER_NM@@@_ on host $host_name."
+	echo "[`date`] [${my_pid}] Completed working with user _@@@CTM_USER_NM@@@_ on host -$host_name."
 done		
 echo "</table></body></html>" >> ${exec_trace}
 chmod a+r ${exec_trace}

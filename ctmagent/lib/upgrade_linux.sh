@@ -103,7 +103,8 @@ backup_agent(){
 
 	cd ${agnt_home}
 	tar -cvf "${backup_file}" "ctm"
-	if [ $? -ne 0 ]
+	tar_stat=$?
+	if [ $tar_stat -ne 0 -a $tar_stat -ne 5 ]
 	then
 		echo "[`date`] ERROR - Couldnot complete backup of current agent. Archival process failed."
 		rm -f ${agnt_home}/${backup_file}
@@ -115,11 +116,20 @@ backup_agent(){
                 rm -f ${agnt_home}/${backup_file}
                 exit 1
         fi
-	cp ${agnt_home}/installed-versions.txt ${agnt_home}/${backup_vrsn_file}
+
+	mv ${agnt_home}/${backup_file} /var/tmp/${backup_file}
+	if [ $? -ne 0  ]
+	then
+		echo "[`date`] ERROR - Couldnot complete backup of current agent. Archival process failed."
+		rm -f ${agnt_home}/${backup_file} /var/tmp/${backup_file}
+		exit 1
+	fi
+
+	cp ${agnt_home}/installed-versions.txt /var/tmp/${backup_vrsn_file}
         if [ $? -ne 0 ]
         then
                 echo "[`date`] ERROR - Couldnot complete backup of current agent. Version file backup issue."
-                rm -f ${agnt_home}/${backup_file} ${agnt_home}/${backup_vrsn_file}
+		rm -f /var/tmp/${backup_file} /var/tmp/${backup_vrsn_file}
                 exit 1
         fi
  
@@ -210,6 +220,7 @@ agent_upgrade(){
 	validation_disk_space
 
 	echo "[`date`] Starting to execute upgrade."
+	status_install=0
 	dtval=`date +%F-%H-%M`
 	upgd_cmmd_file=/tmp/ctmagent_upgrade_${dtval}_cmd.tmp.$$
 	${my_home}/setup.sh -silent ${my_home}/upgrade.xml > ${upgd_cmmd_file} 2>&1
@@ -217,14 +228,35 @@ agent_upgrade(){
 	if [ $? -ne 0 ]
         then
                 echo "[`date`] ERROR - Upgradation failed."
-                exit 1
+                status_install=1
         fi
 	grep -i "completed successfully" ${upgd_cmmd_file} | grep -i "installation"
         if [ $? -ne 0 ]
         then
                 echo "[`date`] ERROR - Upgradation failed. Not stated completion in logs."
-                exit 1
+                status_install=1
         fi
+
+	if [ $status_install -ne 0 ]
+        then
+		echo "[`date`] ERROR - Upgradation failed. Retry in progress."
+		dtval=`date +%F-%H-%M`
+		upgd_cmmd_file=/tmp/ctmagent_upgrade_${dtval}_cmd.tmp.$$
+		${my_home}/setup.sh -silent ${my_home}/upgrade.xml > ${upgd_cmmd_file} 2>&1
+		
+		if [ $? -ne 0 ]
+		then
+			echo "[`date`] ERROR - Retry upgradation failed."
+			exit 1
+		fi
+		grep -i "completed successfully" ${upgd_cmmd_file} | grep -i "installation"
+		if [ $? -ne 0 ]
+		then
+			echo "[`date`] ERROR - Retry failed. Not stated completion in logs."
+			exit 1
+		fi
+	fi
+
 	ag_diag_comm | grep "Agent Version" | grep "${upgrade_final_verion}"
         if [ $? -ne 0 ]
         then
@@ -295,6 +327,61 @@ agent_patch(){
         echo "___PATCH SUCCESSFUL___"
 }
 
+## Protocol Version Update
+update_proto() {
+        set -x
+        echo "[`date`] Starting Protocol Version Upgrade."
+
+        ls -ltr `which ctmagcfg` >/dev/null 2>&1
+        if [ $? -ne 0 ]
+        then
+                echo "[`date`] ERROR - Unable to find controlm configuration script."
+                exit 1
+        fi
+
+        ls -ltr `which ag_diag_comm` >/dev/null 2>&1
+        if [ $? -ne 0 ]
+        then
+                echo "[`date`] ERROR - Unable to find controlm status check script."
+                exit 1
+        fi
+
+        status_agent "STOPPED"
+
+        proto_file=/tmp/ctmagent_proto_file.tmp.$$
+        echo "7" > ${proto_file}
+        echo "9" >> ${proto_file}
+        echo "${protocol_version}" >> ${proto_file}
+        echo "r" >> ${proto_file}
+        echo "s" >> ${proto_file}
+        echo "q" >> ${proto_file}
+        echo "" >> ${proto_file}
+
+        ctmagcfg < ${proto_file}
+        if [ $? -ne 0 ]
+        then
+                echo "[`date`] ERROR - Failed to set correct protocol version."
+                rm -f ${proto_file}
+                exit 1
+        fi
+
+        echo "[`date`] Current protocol version: "
+        ag_diag_comm | grep "Server-Agent Protocol Version" | grep "${protocol_version}"
+
+        if [ $? -ne 0 ]
+        then
+                echo "[`date`] ERROR - Failed to set correct protocol version."
+                rm -f ${proto_file}
+                exit 1
+        fi
+
+        rm -f ${proto_file}
+
+        echo "[`date`] Completed Protocol Version Upgrade completed."
+}
+
+
+
 ## Rollback 
 rollback_agent(){
 	set -x
@@ -302,16 +389,23 @@ rollback_agent(){
 	
         clear_fs
 	
-	cd ${agnt_home}
+	cd /var/tmp
 	backup_fl=`ls -ltr ctm_bck_*tar | tail -1 | awk '{ print $9 }'`
 	backup_vrsn=`echo $backup_fl | awk -F"_bck_" '{ print $2 }' | awk -F"." '{ print $1 }'`
 	backup_vrsn_file="installed-versions.txt_${backup_vrsn}.bck"
-        if [ ! -f ${agnt_home}/${backup_fl} -o ! -f ${agnt_home}/${backup_vrsn_file} ]
+        if [ ! -f /var/tmp/${backup_fl} -o ! -f /var/tmp/${backup_vrsn_file} ]
         then
                 echo "[`date`] ERROR - Backup files not present. Rollback unsuccessfull."
 		exit 1
 	fi
 	
+        mv /var/tmp/${backup_fl} ${agnt_home}/${backup_fl}
+        if [ $? -ne 0 ]
+        then
+                echo "[`date`] ERROR - Couldnot complete rollback. Could not restore backup file."
+                exit 1
+        fi
+
 	echo "[`date`] File to rollback ${backup_fl} and backup version file ${backup_vrsn_file}."
 
 	find $agnt_home/ctm -type f ! -perm -u+w -exec chmod u+rw '{}' \; -print
@@ -324,7 +418,8 @@ rollback_agent(){
                 echo "[`date`] ERROR - Couldnot complete rollback. Unarchival failed."
                 exit 1
         fi
-	cp ${agnt_home}/${backup_vrsn_file} ${agnt_home}/installed-versions.txt
+
+	mv /var/tmp/${backup_vrsn_file} ${agnt_home}/installed-versions.txt
         if [ $? -ne 0 ] 
         then
                 echo "[`date`] ERROR - Couldnot complete rollback. Could not restore version file."
@@ -407,12 +502,23 @@ start_agent(){
 
 	status_agent "STOPPED"
 
+        promt_file=/tmp/ctmagent_promt_file.tmp.$$
+        echo "${my_name}" > $promt_file
+        echo "ALL" >> $promt_file
+        echo "" >> $promt_file
+
 	if [ `echo ${run_as} | grep -qi root ; echo $?` -eq 0 ]
 	then
-		sudo start-ag -u ${run_as} -p ALL
-	else
-		start-ag -u ${run_as} -p ALL
+                sudo start-ag < $promt_file
+                if [ $? -ne 0 ]
+                then
+                        dzdo start-ag < $promt_file
+                fi
+        else
+                start-ag < $promt_file
 	fi
+        rm -f $promt_file
+
 	sleep 5
 
         status_agent "STARTED"
@@ -434,12 +540,24 @@ stop_agent(){
 
 	status_agent "STARTED"
 
+        promt_file=/tmp/ctmagent_promt_file.tmp.$$
+        echo "${my_name}" > $promt_file
+        echo "ALL" >> $promt_file
+        echo "" >> $promt_file
+
 	if [ `echo ${run_as} | grep -qi root ; echo $?` -eq 0 ]
 	then
-		sudo shut-ag -u ${run_as} -p ALL
-	else
-		shut-ag -u ${run_as} -p ALL
+                sudo shut-ag < $promt_file
+                if [ $? -ne 0 ]
+                then
+                        dzdo shut-ag < $promt_file
+                fi
+        else
+                shut-ag < $promt_file
 	fi
+
+        rm -f $promt_file
+
 	sleep 5
 
 	status_agent "STOPPED"
@@ -457,6 +575,8 @@ patch_bin=@@@PATCH_BINARY@@@
 patch_bin_hsh=@@@PATCH_BINARY_HASH@@@
 upgrade_optn_fl=upgrade.xml
 upgrade_optn_fl_hsh=@@@OPTION_FILE_HASH@@@
+do_proto_update=@@@IS_PROTOCOL_UPGRADE_REQUIRE@@@
+protocol_version=@@@FINAL_PROTOCOL_VERSION@@@
 download_home="ctmagent/@@@BINARY_HOME@@@/linux"
 
 upgrade_final_verion=@@@UPGRADE_VERSION@@@
@@ -487,6 +607,8 @@ case ${todo} in
 		agent_upgrade
 		# Patch agent
 		#agent_patch
+                # Update Agent Protocol Version
+                [ $do_proto_update -eq 0 ] && update_proto
 		# Starting up agent
 		start_agent
 		;;
