@@ -19,7 +19,9 @@ Table of Content
         
         2.2. Execution Process
         
-        2.3. Troubleshooting
+        2.3. Robot Script
+        
+        2.4. Troubleshooting
         
 3. Limitation and upgrade
 
@@ -50,6 +52,8 @@ Below are the basic advantages that the tool has:
         6. No worry of unsuccessful upgrade/patch leave agent binary corrupted, tool raises immediate alert in case upgrade/rollback failure.
         
         7. All audit and logs visible and sharable via HTTP Interface thus easy access for the same.
+        
+        8. Option to use robot execution mode which can upgrade in managable parallel batches from a massive amount of agent upgrade request.
         
 
 ### 1.3. Quick Installation
@@ -146,8 +150,34 @@ Once host file is created you are ready to execute a perticular migration scenar
 
 Note above have shown a generic execution script not creating any perticular migration scenario thus the script has generic name but you will always execute a script of a specific scenario.
 
+### 2.3. Robot Script
 
-### 2.2. Troubleshooting
+The above solution only handles the problem of execution of Agent upgrade over any Unix based remote host from a central server. The next challenge for a large enterprise is to handle the volume of upgrade required in the time frame requested. Another requirement inherent to large set of upgrade request is the ability manage and govern the execution of such large upgrade request.
+
+Robot script is your solution to this problem. Below are the design goals for the robot script:
+1. Divide the complete upgrade requests into managable and configurable batch.
+2. Upgrade agents in batches using configurable number of parallel executors.
+3. Tracks and reports the status of upgrade for each upgrades done via executors.
+4. Allow graceful halting and upgrade request on the way incase required.
+5. Allow user to query current status using status tool.
+
+Robot script execution process
+
+$ robot.sh [ OPTION_1 ] [ OPTION_2 ] [ OPTION_3 ]
+
+OPTION_1 : Migration Scenario
+OPTION_2 : Number of parallel executor to use for executing the batches
+OPTION_3 : Host file
+
+***Note*** to configure batch size you need to update the variable "host_in_batch" in robot.sh script.
+
+Once robot is triggered you can request graceful halt by ***creating a stop.robot.[Migration Scenario] file*** in tool home.
+
+While robot executing a large batch in case you want to track current status, use the ***status.sh*** script.
+
+<img src="images/Status_Check.jpg" height="300">
+
+### 2.4. Troubleshooting
 
 The tool is build to be enterprise grade thus has audit and tracking support. The log directory created for a spcific migration scenario  has two type of file.
 
