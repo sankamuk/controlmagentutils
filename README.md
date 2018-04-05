@@ -21,7 +21,9 @@ Table of Content
         
         2.3. Robot Script
         
-        2.4. Troubleshooting
+        2.4. Cleanup Migration Scenario
+        
+        2.5. Troubleshooting
         
 3. Limitation and upgrade
 
@@ -166,7 +168,9 @@ Robot script execution process
 $ robot.sh [ OPTION_1 ] [ OPTION_2 ] [ OPTION_3 ]
 
 OPTION_1 : Migration Scenario
+
 OPTION_2 : Number of parallel executor to use for executing the batches
+
 OPTION_3 : Host file
 
 ***Note*** to configure batch size you need to update the variable "host_in_batch" in robot.sh script.
@@ -177,7 +181,17 @@ While robot executing a large batch in case you want to track current status, us
 
 <img src="images/Status_Check.jpg" height="300">
 
-### 2.4. Troubleshooting
+
+### 2.4. Cleanup Migration Scenario
+
+Note once you are done with a migration scenario invoke uninstall script with scenario name this will cleanup the migration scenario and Archive the audits and scripts in an ARCHIVE folder for future reference.
+
+$ uninstall.sh [ OPTION_1 ]
+
+OPTION_1 : Migration Scenario
+
+
+### 2.5. Troubleshooting
 
 The tool is build to be enterprise grade thus has audit and tracking support. The log directory created for a spcific migration scenario  has two type of file.
 
