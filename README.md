@@ -119,10 +119,10 @@ Note here its of prime importance to place your central server in a host where i
 
 The central tool host is expected to be Linux and thats a requirement though there is not specific requirement for Agent hosts. In case you have issue in providing a Linux host as a central server, you should atleast make Bash shell available in the host. The requirement is present bacause the setup script is written in bash shell also the installtion steps will varry in case you are not using Linux.
 
-<img src="images/Achitecture.jpg" height="200">
+<img src="images/Achitecture.JPG" height="300">
 
 
-<img src="images/Flow.jpg" height="200">
+<img src="images/Flow.JPG" height="300">
 
 The tool is build to migrate agents of flavour Linux/HP_UX/AIX. Thus the tool does not expects any specific requirement of any kind for the Agent hosts. The actual migration driver script is written in Bourne shell, which is available in all flavours. Note here though the actual driver script is kept fairly universal there is a specific version script provided for each flavour of Unix. 
 
