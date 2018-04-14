@@ -20,8 +20,14 @@ mail_report(){
 		echo "[`date`] Requested to send critical alert notification with details ${action_data}."
 		_agnt_host=$(echo ${action_data} | awk -F"@@@" '{ print $1 }')
                 _agnt_user=$(echo ${action_data} | awk -F"@@@" '{ print $2 }')
-		echo "<html><body><h1><center>ControlM Upgrade Tool</center></h1><br><br><table style="width:80%"  border="1" align="center"><tr><td style="width:40%" bgcolor="AFBCBE">Date</td><td>$(date)</td></tr><tr><td style="width:40%" bgcolor="AFBCBE">Host Affected</td><td>${_agnt_host}</td></tr><tr><td style="width:40%" bgcolor="AFBCBE">Agent User</td><td>${_agnt_user}</td></tr></table><br><br></body></html>" > $mail_file
+		echo "<html><body><h1><center>ControlM Upgrade Tool</center></h1><br><br><table style="width:80%"  border="1" align="center"><tr><td style="width:40%" bgcolor="AFBCBE">Date</td><td>$(date)</td></tr><tr><td style="width:40%" bgcolor="AFBCBE">Host Affected</td><td>${_agnt_host}</td></tr><tr><td style="width:40%" bgcolor="AFBCBE">Agent User</td><td>${_agnt_user}</td></tr><tr><td style="width:40%" bgcolor="AFBCBE">Remark</td><td>Agent Upgrade Issue</td></tr></table><br><br></body></html>" > $mail_file
 		mail_subject="ALERT: Agent upgrade had issue on host ${_agnt_host}. Urgent action required."
+        elif [ "$action_to" == "MODULE" ] ; then
+                echo "[`date`] Requested to send critical alert notification with details ${action_data}."
+                _agnt_host=$(echo ${action_data} | awk -F"@@@" '{ print $1 }')
+                _agnt_user=$(echo ${action_data} | awk -F"@@@" '{ print $2 }')
+                echo "<html><body><h1><center>ControlM Upgrade Tool</center></h1><br><br><table style="width:80%"  border="1" align="center"><tr><td style="width:40%" bgcolor="AFBCBE">Date</td><td>$(date)</td></tr><tr><td style="width:40%" bgcolor="AFBCBE">Host Affected</td><td>${_agnt_host}</td></tr><tr><td style="width:40%" bgcolor="AFBCBE">Agent User</td><td>${_agnt_user}</td></tr><tr><td style="width:40%" bgcolor="AFBCBE">Remark</td><td>Module Upgrade Issue</td></tr></table><br><br></body></html>" > $mail_file
+                mail_subject="ALERT: Agent Module upgrade had issue on host ${_agnt_host}. Urgent action required."
 	elif [ "$action_to" == "REPORT" ] ; then
                 echo "[`date`] Requested to send final report of upgrade."
 		if [ -f ${action_data} ] ; then
@@ -57,7 +63,7 @@ run_action_on_host(){
  sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "ag_diag_comm" > ${tmp_file} 2>&1
  if [ $? -ne 0 ] ; then
   echo "[`date`] ERROR - Unable to execute remote command on host."
-  echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td></tr>" >> ${exec_trace}
+  echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td><td>NA</td></tr>" >> ${exec_trace}
  else
   agnt_usr=$(grep "Agent User Name" ${tmp_file} | awk -F":" '{ print $2 }' | xargs)
   agnt_vsn=$(grep "Agent Version" ${tmp_file} | awk -F":" '{ print $2 }' | xargs)
@@ -68,16 +74,16 @@ run_action_on_host(){
   rm -f ${tmp_file}
   if [ "$agnt_usr" != "${run_user}" ] ; then
    echo "[`date`] Agent not configured with this user."
-   echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>NA</td></tr>" >> ${exec_trace}
+   echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>NA</td><td>NA</td></tr>" >> ${exec_trace}
   else
    echo "$agnt_vsn" | grep -q "${curnt_version}"
    if [ $? -ne 0 ] ; then
     echo "[`date`] Agent current version not ${curnt_version} thus no upgrade required."
-    echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>NA</td></tr>" >> ${exec_trace}
+    echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>NA</td><td>NA</td></tr>" >> ${exec_trace}
    else
     if [ $agnt_lnr_stat -eq 0 -o $agnt_trc_stat -eq 0 ] ; then
      echo "[`date`] Agent currently not running. Thus probably decommisioned."
-     echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>NA</td></tr>" >> ${exec_trace}
+     echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>NA</td><td>NA</td></tr>" >> ${exec_trace}
     else
      case $os_type in
      Linux)
@@ -95,12 +101,12 @@ run_action_on_host(){
      esac
      if [ $dwn_exec_stat -ne 0 ] ; then
          echo "[`date`] ERROR - Unable to download upgrade script in agent host."
-         echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td></tr>" >> ${exec_trace}
+         echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td><td>NA</td></tr>" >> ${exec_trace}
      else
          sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "chmod a+rx ~/upgrade.sh"
          if [ $? -ne 0 ] ; then
            echo "[`date`] ERROR - Unable to set correct permission to upgrade script in agent host."
-           echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td></tr>" >> ${exec_trace}
+           echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td><td>NA</td></tr>" >> ${exec_trace}
          else
            sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "~/upgrade.sh upgrade_agent ${agnt_cntl_host} ${run_user} ${run_as}"
            if [ $? -ne 0 ] ; then
@@ -108,27 +114,38 @@ run_action_on_host(){
              sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "~/upgrade.sh is_started ${agnt_cntl_host} ${run_user} ${run_as}"
              if [ $? -eq 0 ] ; then
                echo "[`date`] ERROR - Rollback happened successfully. Agent currently running."
-               echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td></tr>" >> ${exec_trace}
+               echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td><td>NA</td></tr>" >> ${exec_trace}
              else
                sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "~/upgrade.sh start_agent ${agnt_cntl_host} ${run_user} ${run_as}"
                if [ $? -eq 0 ] ; then
                  echo "[`date`] ERROR - Rollback happened successfully. Agent currently running."
-                 echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td></tr>" >> ${exec_trace}
+                 echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td><td>NA</td></tr>" >> ${exec_trace}
                else
                  sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "~/upgrade.sh rollback_agent ${agnt_cntl_host} ${run_user} ${run_as}"
                  if [ $? -ne 0 ] ; then
                    echo "[`date`] ERROR - Rollback unsuccessfull. Raising concerned as agent state unstable."
-                   echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Critical Failure</td></tr>" >> ${exec_trace}
+                   echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Critical Failure</td><td>NA</td></tr>" >> ${exec_trace}
                    mail_report "ALERT" "${host_nm}@@@${run_user}"
                  else
                    echo "[`date`] ERROR - Rollback happened successfully. Agent currently running."
-                   echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td></tr>" >> ${exec_trace}
+                   echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Failed</td><td>NA</td></tr>" >> ${exec_trace}
                  fi
                fi
              fi
            else
              echo "[`date`] Agent upgrade successful."
-             echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Success</td></tr>" >> ${exec_trace}
+	     sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "~/upgrade.sh upgrade_module ${agnt_cntl_host} ${run_user} ${run_as}"
+             if [ $? -ne 0 ] ; then
+                echo "[`date`] Module upgrade also successful."
+		echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Success</td><td>Success</td></tr>" >> ${exec_trace}
+	     elif [ $? -ne 2 ] ; then
+                echo "[`date`] Could not successfully complete, either module upgrade steps/binary not available."
+             	echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Success</td><td>Incomplete</td></tr>" >> ${exec_trace}
+             else
+		echo "[`date`] ERROR - Module upgrade failure. Needs attention."
+                echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Success</td><td>Critical Failure</td></tr>" >> ${exec_trace}
+		mail_report "MODULE" "${host_nm}@@@${run_user}"
+             fi
            fi
          fi
        fi
@@ -172,7 +189,7 @@ echo "[`date`] [${my_pid}] EMAIL_ID=${email_id}"
 echo "<html><body><h1><center>ControlM Upgrade Tool</center></h1><br><br>" >> ${exec_trace}
 echo "<table style="width:80%"  border="1" align="center"><tr><td style="width:40%" bgcolor="AFBCBE">Date</td><td>${today_dt}</td></tr><tr><td style="width:40%" bgcolor="AFBCBE">Execution Host</td><td>$(hostname)</td></tr><tr><td style="width:40%" bgcolor="AFBCBE">Log Location</td><td>${log_home}</td></tr></table><br><br>" >> ${exec_trace}
 echo "<table style="width:80%"  border="1" align="center"><tr bgcolor="BBF1FA">" >> ${exec_trace}
-echo "<th>Host</th><th>OS</th><th>User</th><th>Upgrade Status</th></tr>" >> ${exec_trace}
+echo "<th>Host</th><th>OS</th><th>User</th><th>Upgrade Status</th><th>Module Upgrade</th></tr>" >> ${exec_trace}
 
 ## Execute upgrade from host file
 for host_name in $(cat ${host_file})
@@ -188,7 +205,7 @@ do
 		echo "[`date`] [${my_pid}] Completed action."
 	else
                 echo "[`date`] [${my_pid}] ERROR - Unable to connect to host "$host_name" with user _@@@CTM_USER_NM@@@_."
-		echo "<tr><td>${host_name}</td><td>Unknown</td><td>_@@@CTM_USER_NM@@@_</td><td>Connection Issue</td></tr>" >> ${exec_trace}
+		echo "<tr><td>${host_name}</td><td>Unknown</td><td>_@@@CTM_USER_NM@@@_</td><td>Connection Issue</td><td>NA</td></tr>" >> ${exec_trace}
 	fi
 	echo "[`date`] [${my_pid}] Completed working with user _@@@CTM_USER_NM@@@_ on host -$host_name."
 done		

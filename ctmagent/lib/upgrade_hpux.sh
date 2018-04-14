@@ -21,8 +21,16 @@ validation_disk_space(){
 	if [ $curnt_avl -lt $min_space ]
         then
 		echo "[`date`] ERROR - Current space required $min_space, while we have only $curnt_avl thus failed to continue."
+		clear_fs
 		exit 1
 	fi
+	curnt_avl=`df -Pk /var/tmp | grep -v Available | awk '{ print $4 }'`
+        if [ $curnt_avl -lt 250000 ]
+        then
+                echo "[`date`] ERROR - Current space required for /var/tmp is 500MB, while we have only $curnt_avl thus failed to continue."
+		clear_fs
+                exit 1
+        fi
         echo "[`date`] Space left is successfully validated."
 }
 
@@ -35,6 +43,8 @@ clear_fs(){
         rm -f ${my_home}/setup.sh
         rm -rf ${my_home}/Setup_files
         rm -rf ${my_home}/FORMS
+	rm -rf /var/tmp/${my_name}_CTM_Upgrade
+	sleep 60
 	echo "[`date`] Completed clearing filesystem."
 }
 
@@ -89,6 +99,8 @@ backup_agent(){
 	set -x
 
         clear_fs
+	rm -f /var/tmp/ctm_bck_*
+	rm -f /var/tmp/installed-versions.txt_*
 
         echo "[`date`] Generating backup environment."
 
@@ -107,12 +119,14 @@ backup_agent(){
 	if [ $tar_stat -ne 0 -a $tar_stat -ne 5 ]
 	then
 		echo "[`date`] ERROR - Couldnot complete backup of current agent. Archival process failed."
+		clear_fs
 		rm -f ${agnt_home}/${backup_file}
 		exit 1
 	fi
 	if [ ! -f ${agnt_home}/${backup_file} ]
         then
                 echo "[`date`] ERROR - Couldnot complete backup of current agent. Backup file cannot be found."
+		clear_fs
                 rm -f ${agnt_home}/${backup_file}
                 exit 1
         fi
@@ -121,6 +135,7 @@ backup_agent(){
 	if [ $? -ne 0  ]
 	then
 		echo "[`date`] ERROR - Couldnot complete backup of current agent. Archival process failed."
+                clear_fs
 		rm -f ${agnt_home}/${backup_file} /var/tmp/${backup_file}
 		exit 1
 	fi
@@ -129,6 +144,7 @@ backup_agent(){
         if [ $? -ne 0 ]
         then
                 echo "[`date`] ERROR - Couldnot complete backup of current agent. Version file backup issue."
+                clear_fs
 		rm -f /var/tmp/${backup_file} /var/tmp/${backup_vrsn_file}
                 exit 1
         fi
@@ -148,6 +164,7 @@ download_content() {
         if [ $? -ne 0 ]
         then
                 echo "[`date`] ERROR - Unable to find downloader executale."
+		clear_fs
                 exit 1
         fi
 
@@ -159,11 +176,13 @@ download_content() {
 		if [ $? -ne 0 ]
 		then
 			echo "[`date`] ERROR - Issue in downloading binary ${file_to_download}."
+			clear_fs
 			exit 1
 		fi
                 if [ ! -f ${my_home}/${file_to_download} ]
                 then
                         echo "[`date`] ERROR - Issue in downloading binary ${file_to_download}."
+			clear_fs
                         exit 1
                 fi
 	fi
@@ -174,6 +193,7 @@ download_content() {
 	if [ $checksum_stat -ne 0 ]
         then
 		echo "[`date`] ERROR - Issue in downloading binary, checksum doesnot match."
+		clear_fs
 		exit 1
 	fi
         echo "[`date`] Completed checksum validation."
@@ -191,6 +211,7 @@ agent_upgrade(){
 	if [ ! -f ${my_home}/${upgrade_bin} -o ! -f ${my_home}/${upgrade_optn_fl} ]
 	then
 		echo "[`date`] ERROR - Required files not present for upgrade to be initiated."
+		clear_fs
 		exit 1
 	fi
 
@@ -200,21 +221,49 @@ agent_upgrade(){
 	if [ $? -ne 0 ] 
 	then
 		echo "[`date`] ERROR - Uncompression failed."
+		clear_fs
 		exit 1
 	fi
 	if [ ! -f ${my_home}/setup.sh -o ! -d ${my_home}/Setup_files ]
         then
                 echo "[`date`] ERROR - Few content missing after Uncompression."
+		clear_fs
                 exit 1
         fi
 	rm -f ${my_home}/${upgrade_bin}
+	sleep 60
+
         scrpt_perm=`chmod a+x ${my_home}/setup.sh ; echo $?`
         bin_hom_perm=`chmod -R a+x ${my_home}/Setup_files ; echo $?`
         if [ $scrpt_perm -ne 0 -o $bin_hom_perm -ne 0 ]
         then
                 echo "[`date`] ERROR - Unable to set correct permission to expanded binary."
+		clear_fs
                 exit 1
         fi
+
+	[ ! -d /var/tmp/${my_name}_CTM_Upgrade ] && mkdir /var/tmp/${my_name}_CTM_Upgrade
+        if [ $? -ne 0 ]
+        then
+                echo "[`date`] ERROR - Setup File backup location creation failed."
+		clear_fs
+                exit 1
+        fi
+        mv ${my_home}/Setup_files /var/tmp/${my_name}_CTM_Upgrade
+        if [ $? -ne 0 ]
+        then
+                echo "[`date`] ERROR - Moving Setup File to backup location failed."
+		clear_fs
+                exit 1
+        fi
+        ln -s /var/tmp/${my_name}_CTM_Upgrade/Setup_files ${my_home}/Setup_files
+        if [ $? -ne 0 ]
+        then
+                echo "[`date`] ERROR - Issue in creating Setup File Link to ${my_home}."
+		clear_fs
+                exit 1
+        fi
+
 	echo "[`date`] Successful Uncompression."
 
 	validation_disk_space
@@ -247,12 +296,14 @@ agent_upgrade(){
 		if [ $? -ne 0 ]
 		then
 			echo "[`date`] ERROR - Retry upgradation failed."
+			clear_fs
 			exit 1
 		fi
 		grep -i "completed successfully" ${upgd_cmmd_file} | grep -i "installation"
 		if [ $? -ne 0 ]
 		then
 			echo "[`date`] ERROR - Retry failed. Not stated completion in logs."
+			clear_fs
 			exit 1
 		fi
 	fi
@@ -261,6 +312,7 @@ agent_upgrade(){
         if [ $? -ne 0 ]
         then
                 echo "[`date`] ERROR - Upgradation failed. Not showing correct version in status command."
+		clear_fs
                 exit 1
         fi
 	echo "[`date`] Successfully validated agent upgrade."
@@ -269,6 +321,7 @@ agent_upgrade(){
 	cat ${upgd_cmmd_file}
 	echo "-----------------------------"
 	rm -f ${upgd_cmmd_file}
+	clear_fs
 
         echo "___UPGRADE SUCCESSFUL___"
 }
@@ -284,12 +337,14 @@ agent_patch(){
         if [ ! -f ${my_home}/${patch_bin} ]
         then
                 echo "[`date`] ERROR - Required files not present for patch to be initiated."
+		clear_fs
                 exit 1
         fi
 	chmod a+x ${my_home}/${patch_bin}
         if [ $? -ne 0 ]
         then
                 echo "[`date`] ERROR - Unable to make binary executable."
+		clear_fs
                 exit 1
         fi
 	
@@ -303,18 +358,21 @@ agent_patch(){
         if [ $? -ne 0 ]
         then
                 echo "[`date`] ERROR - Upgradation failed."
+		clear_fs
                 exit 1
         fi
         grep -i "completed successfully" ${pch_cmmd_file} | grep -i "installation"
         if [ $? -ne 0 ]
         then
                 echo "[`date`] ERROR - Patching failed. Not stated completion in logs."
+		clear_fs
                 exit 1
         fi
         ag_diag_comm | grep "Agent Version" | grep "${patch_final_verion}"
         if [ $? -ne 0 ]
         then
                 echo "[`date`] ERROR - Patch failed. Not showing correct version in status command."
+		clear_fs
                 exit 1
         fi
 	echo "[`date`] Successfully validated agent patch."
@@ -323,6 +381,7 @@ agent_patch(){
         cat ${pch_cmmd_file}
         echo "-----------------------------"
         rm -f ${pch_cmmd_file}
+	clear_fs
 
         echo "___PATCH SUCCESSFUL___"
 }
@@ -565,18 +624,309 @@ stop_agent(){
         echo "[`date`] Successfully stopped agent."
 }
 
+## Module Backup
+backup_module() {
+	set -x
+
+        clear_fs
+	rm -f /var/tmp/ctm_cm_bck_*
+        rm -f /var/tmp/installed-versions_cm.txt_*
+
+        echo "[`date`] Generating backup for module."
+	
+	dtval=`date +%F-%H-%M`
+	backup_file="ctm_cm_bck_${dtval}.tar"
+	backup_vrsn_file="installed-versions_cm.txt_${dtval}.bck"
+	echo "[`date`] Backup module file name is ${backup_file} and version file name ${backup_vrsn_file}."
+
+	echo "[`date`] Starting backup process."
+
+	cd ${agnt_home}/ctm
+
+	tar -cvf "${backup_file}" "cm"
+	tar_stat=$?
+
+	if [ $tar_stat -ne 0 -a $tar_stat -ne 5 ]
+	then
+		echo "[`date`] ERROR - Couldnot complete backup of current agent. Archival process failed."
+		rm -f ${agnt_home}/ctm/${backup_file}
+		exit 1
+	fi
+
+	if [ ! -f ${agnt_home}/ctm/${backup_file} ]
+        then
+                echo "[`date`] ERROR - Couldnot complete backup of current agent modules. Backup file cannot be found."
+                rm -f ${agnt_home}/ctm/${backup_file}
+                exit 1
+        fi
+
+	mv ${agnt_home}/ctm/${backup_file} /var/tmp/${backup_file}
+	if [ $? -ne 0  ]
+	then
+		echo "[`date`] ERROR - Couldnot complete backup of current agent modules. Archival process failed."
+		rm -f ${agnt_home}/ctm/${backup_file} /var/tmp/${backup_file}
+		exit 1
+	fi
+
+	cp ${agnt_home}/installed-versions.txt /var/tmp/${backup_vrsn_file}
+        if [ $? -ne 0 ]
+        then
+                echo "[`date`] ERROR - Couldnot complete backup of current agent. Version file backup issue."
+		rm -f /var/tmp/${backup_file} /var/tmp/${backup_vrsn_file}
+                exit 1
+        fi
+ 
+	echo "[`date`] Completed backup."
+
+}
+
+## Module Upgrade
+upgrade_module() {
+	set -x
+        echo "[`date`] Initiating module upgrade prechecks."
+
+	clear_fs
+	module_final_status=0
+	
+	stop_agent
+
+	cd ${agnt_home}/ctm/cm
+	for mod_nm in `ls -ltr | grep -v uninstall | grep ^d | awk '{ print $9 }' | grep "^[A-Z]"`
+	do
+		echo "[`date`] Starting to work on module ${mod_nm}."
+		if [ -f ${agnt_home}/installed-versions.txt ] ; then
+			vsn_fl=${agnt_home}/installed-versions.txt
+		elif [ -f ${my_home}/installed-versions.txt ] ; then
+                        vsn_fl=${my_home}/installed-versions.txt
+		else
+			echo "[`date`] ERROR - Unable to locate version file."
+			exit 1
+		fi
+		mod_no=1
+		mod_ok=1
+                grep -q ^${mod_nm} $module_file
+		if [ $? -ne 0 ] 
+		then
+			mod_no=0
+		else
+			tar_vrsn=`grep ^${mod_nm} $module_file | awk -F"," '{ print $2 }'`
+			case ${mod_nm} in
+			"SAP")
+			grep "SAP" ${vsn_fl} | awk '{ print $5 }' | awk -F"." '{ print $1 }' | grep -v ${tar_vrsn}
+			if [ $? -eq 0 ] 
+			then
+				grep "SAP" ${vsn_fl}
+				mod_ok=0 
+			fi
+			;;
+			"AFT")
+                        grep "Advanced File Transfer" ${vsn_fl} | awk '{ print $5 }' | awk -F"." '{ print $1 }' | grep -v ${tar_vrsn}
+                        if [ $? -eq 0 ]
+                        then
+                                grep "Advanced File Transfer" ${vsn_fl}
+                                mod_ok=0
+                        fi
+			;;
+                        "HADOOP")
+                        grep "Hadoop" ${vsn_fl} | awk '{ print $5 }' | awk -F"." '{ print $1 }' | grep -v ${tar_vrsn}
+                        if [ $? -eq 0 ]
+                        then
+                                grep "Hadoop" ${vsn_fl}
+                                mod_ok=0
+                        fi
+                        ;;
+                        "INF")
+                        grep "Informatica" ${vsn_fl} | awk '{ print $5 }' | awk -F"." '{ print $1 }' | grep -v ${tar_vrsn}
+                        if [ $? -eq 0 ]
+                        then
+                                grep "Informatica" ${vsn_fl}
+                                mod_ok=0
+                        fi
+                        ;;
+			esac
+		fi
+		if [ $mod_no -eq 0 ]
+		then
+			echo "[`date`] Module ${mod_nm} cannot be handles, but will be reported."
+			module_final_status=2
+                elif [ $mod_ok -eq 0 ]
+                then
+                        echo "[`date`] Module ${mod_nm} not in version to apply upgrade."
+		else
+			mupgd_bin=`grep ^${mod_nm} $module_file | awk -F"," '{ print $3 }'`
+			mupgd_bin_hsh=`grep ^${mod_nm} $module_file | awk -F"," '{ print $4 }'`
+			mupgd_ctl_fl=`grep ^${mod_nm} $module_file | awk -F"," '{ print $5 }'`
+                        mupgd_ctl_fl_hsh=`grep ^${mod_nm} $module_file | awk -F"," '{ print $6 }'`
+                        clear_fs
+
+                        download_content "${mupgd_bin}" "${mupgd_bin_hsh}"
+                        download_content "${mupgd_ctl_fl}" "${mupgd_ctl_fl_hsh}"
+			if [ ! -f ${my_home}/${mupgd_bin} -o ! -f ${my_home}/${mupgd_ctl_fl} ]
+			then
+				echo "[`date`] ERROR - Required files not present for upgrade to be initiated."
+				clear_fs
+				rm -f ${my_home}/${mupgd_bin} 
+				rm -f ${my_home}/${mupgd_ctl_fl}
+				exit 1
+			fi
+
+			cd ${my_home}
+			tar -xvf ${mupgd_bin}
+			if [ $? -ne 0 ] 
+			then
+				echo "[`date`] ERROR - Uncompression failed."
+				clear_fs
+				rm -f ${my_home}/${mupgd_bin}
+                                rm -f ${my_home}/${mupgd_ctl_fl}
+				exit 1
+			fi
+			if [ ! -f ${my_home}/setup.sh -o ! -d ${my_home}/Setup_files ]
+		        then
+                		echo "[`date`] ERROR - Few content missing after Uncompression."
+                                clear_fs
+                                rm -f ${my_home}/${mupgd_bin}
+                                rm -f ${my_home}/${mupgd_ctl_fl}
+		                exit 1
+		        fi
+
+			rm -f ${my_home}/${mupgd_bin}
+		        mscrpt_perm=`chmod a+x ${my_home}/setup.sh ; echo $?`
+		        mbin_hom_perm=`chmod -R a+x ${my_home}/Setup_files ; echo $?`
+		        if [ $mscrpt_perm -ne 0 -o $mbin_hom_perm -ne 0 ]
+		        then
+                		echo "[`date`] ERROR - Unable to set correct permission to expanded binary."
+                                clear_fs
+                                rm -f ${my_home}/${mupgd_bin}
+                                rm -f ${my_home}/${mupgd_ctl_fl}
+		                exit 1
+		        fi
+
+			[ ! -d /var/tmp/${my_name}_CTM_Upgrade ] && mkdir /var/tmp/${my_name}_CTM_Upgrade
+		        if [ $? -ne 0 ]
+        		then
+                		echo "[`date`] ERROR - Moving Setup File to backup location failed."
+		                clear_fs
+                                rm -f ${my_home}/${mupgd_bin}
+                                rm -f ${my_home}/${mupgd_ctl_fl}
+                		exit 1
+		        fi
+		        ln -s /var/tmp/${my_name}_CTM_Upgrade/Setup_files ${my_home}/Setup_files
+		        if [ $? -ne 0 ]
+		        then
+                		echo "[`date`] ERROR - Issue in creating Setup File Link to ${my_home}."
+		                clear_fs
+                                rm -f ${my_home}/${mupgd_bin}
+                                rm -f ${my_home}/${mupgd_ctl_fl}
+                		exit 1
+		        fi
+			
+			echo "[`date`] Successful Uncompression."
+			validation_disk_space
+
+			mdtval=`date +%F-%H-%M`
+			mupgd_cmmd_file=/tmp/ctmagent_upgrade_module_${mod_nm}_${mdtval}_cmd.tmp.$$
+
+			${my_home}/setup.sh -silent ${my_home}/${mupgd_ctl_fl} > ${mupgd_cmmd_file} 2>&1
+			if [ $? -ne 0 ]
+			then
+				echo "[`date`] ERROR - Module ${mod_nm} upgradation failed."
+                                clear_fs
+                                rm -f ${my_home}/${mupgd_bin}
+                                rm -f ${my_home}/${mupgd_ctl_fl}
+				exit 1
+			fi
+			
+			echo "---------MODULE (${mod_nm}) UPGRADE LOG---------"
+			cat ${mupgd_cmmd_file}
+			echo "------------------------------------------------"
+			clear_fs
+			rm -f ${my_home}/${mupgd_bin}
+			rm -f ${my_home}/${mupgd_ctl_fl}
+			
+			echo "[`date`] Successfully completed module upgrade."
+
+                        mdo_patch=`grep ^${mod_nm} $module_file | awk -F"," '{ print $7 }'`
+			
+			if [ $mdo_patch -eq 0 ] ; then
+				echo "[`date`] Starting module patch."
+	                        mpatch_bin=`grep ^${mod_nm} $module_file | awk -F"," '{ print $8 }'`
+        	                mpatch_bin_hsh=`grep ^${mod_nm} $module_file | awk -F"," '{ print $9 }'`
+			
+				download_content "${mpatch_bin}" "${mpatch_bin_hsh}"	
+				if [ ! -f ${my_home}/${mpatch_bin} ]
+			        then
+			                echo "[`date`] ERROR - Required files not present for patch to be initiated."
+	                                clear_fs
+			                exit 1
+			        fi
+				chmod a+x ${my_home}/${mpatch_bin}
+				mdtval=`date +%F-%H-%M`
+			        mpch_cmmd_file=/tmp/ctmagent_patch_module_${mod_nm}_${mdtval}_cmd.tmp.$$
+				${my_home}/${mpatch_bin} -s > ${mpch_cmmd_file} 2>&1
+				if [ $? -ne 0 ]
+			        then
+			                echo "[`date`] ERROR - Module ${mod_nm} patching failed."
+					clear_fs
+					rm -f ${my_home}/${mpatch_bin}
+			                exit 1
+			        fi
+			        echo "---------MODULE (${mod_nm}) PATCH LOG---------"
+			        cat ${mpch_cmmd_file}
+			        echo "----------------------------------------------"
+			        rm -f ${mpch_cmmd_file}
+				clear_fs
+				rm -f ${my_home}/${mpatch_bin}
+				echo "[`date`] Successfully completed module patching."
+			fi
+		fi
+	done
+	
+	echo "[`date`] Completed module upgrade process."	
+
+	start_agent
+
+	exit ${module_final_status} 
+
+}
+
+
 # ___MAIN___
 
-# Environment setup
+## Environment setup
 bin_host=@@@BINARY_HOST@@@
 upgrade_bin=@@@UPGRADE_BINARY@@@
 upgrade_bin_hsh=@@@UPGRADE_BINARY_HASH@@@
+do_patch=@@@IS_PATCH_REQUIRE@@@
 patch_bin=@@@PATCH_BINARY@@@
 patch_bin_hsh=@@@PATCH_BINARY_HASH@@@
 upgrade_optn_fl=upgrade.xml
 upgrade_optn_fl_hsh=@@@OPTION_FILE_HASH@@@
 do_proto_update=@@@IS_PROTOCOL_UPGRADE_REQUIRE@@@
 protocol_version=@@@FINAL_PROTOCOL_VERSION@@@
+do_module_update=@@@IS_MODULE_UPGRADE_REQUIRE@@@
+## Module definitions
+module_file=/tmp/upgrade_module_file.tmp.$$
+do_module_aft=@@@IS_AFT_UPGRADE_REQUIRE@@@
+do_module_sap=@@@IS_SAP_UPGRADE_REQUIRE@@@
+do_module_informatica=@@@IS_INFORMATICA_UPGRADE_REQUIRE@@@
+do_module_hadoop=@@@IS_HADOOP_UPGRADE_REQUIRE@@@
+if [ $do_module_aft -eq 0 ]
+then
+	echo "AFT,@@@AFT_CURRENT_VERSION@@@,@@@AFT_UPGRADE_BINARY@@@,@@@AFT_UPGRADE_BINARY_HASH@@@,@@@AFT_UPGRADE_CONTRL_FILE@@@,@@@AFT_UPGRADE_CONTRL_HASH@@@,@@@AFT_PATCH_IS@@@,@@@AFT_PATCH_BINARY@@@,@@@AFT_PATCH_BINARY_HASH@@@" >> $module_file
+fi
+if [ $do_module_sap -eq 0 ]
+then
+	echo "SAP,@@@SAP_CURRENT_VERSION@@@,@@@SAP_UPGRADE_BINARY@@@,@@@SAP_UPGRADE_BINARY_HASH@@@,@@@SAP_UPGRADE_CONTRL_FILE@@@,@@@SAP_UPGRADE_CONTRL_HASH@@@,@@@SAP_PATCH_IS@@@,@@@SAP_PATCH_BINARY@@@,@@@SAP_PATCH_BINARY_HASH@@@" >> $module_file
+fi
+if [ $do_module_informatica -eq 0 ]
+then
+        echo "INF,@@@INFORMATICA_CURRENT_VERSION@@@,@@@INFORMATICA_UPGRADE_BINARY@@@,@@@INFORMATICA_UPGRADE_BINARY_HASH@@@,@@@INFORMATICA_UPGRADE_CONTRL_FILE@@@,@@@INFORMATICA_UPGRADE_CONTRL_HASH@@@,@@@INFORMATICA_PATCH_IS@@@,@@@INFORMATICA_PATCH_BINARY@@@,@@@INFORMATICA_PATCH_BINARY_HASH@@@" >> $module_file
+fi
+if [ $do_module_hadoop -eq 0 ]
+then
+        echo "HADOOP,@@@HADOOP_CURRENT_VERSION@@@,@@@HADOOP_UPGRADE_BINARY@@@,@@@HADOOP_UPGRADE_BINARY_HASH@@@,@@@HADOOP_UPGRADE_CONTRL_FILE@@@,@@@HADOOP_UPGRADE_CONTRL_HASH@@@,@@@HADOOP_PATCH_IS@@@,@@@HADOOP_PATCH_BINARY@@@,@@@HADOOP_PATCH_BINARY_HASH@@@" >> $module_file
+fi
+
 download_home="ctmagent/@@@BINARY_HOME@@@/hpux"
 
 upgrade_final_verion=@@@UPGRADE_VERSION@@@
@@ -606,7 +956,7 @@ case ${todo} in
 		# Updating agent
 		agent_upgrade
 		# Patch agent
-		#agent_patch
+		[ $do_patch -eq 0 ] && agent_patch
                 # Update Agent Protocol Version
                 [ $do_proto_update -eq 0 ] && update_proto
 		# Starting up agent
@@ -621,6 +971,16 @@ case ${todo} in
                 echo "[`date`] Requested ControlM agent to be backed up."
                 # Initiating backup
                 backup_agent
+                ;;
+        upgrade_module)
+                echo "[`date`] Requested ControlM agent agent to be upgrade."
+		if [ $do_module_update -eq 0 ]
+		then
+                	# Initiating backup module
+	                backup_module
+                	# Updating module
+	                upgrade_module
+		fi
                 ;;
 	start_agent)
                 echo "[`date`] Start ControlM agent."
