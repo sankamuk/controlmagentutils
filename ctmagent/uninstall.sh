@@ -22,10 +22,18 @@ fi
 
 echo "Uninstalling, the complete audit will be archived in directory ${script_home}/ARCHIVE/${scenro}_${today_dt}.tar.gz."
 
-[ ! -d ${script_home}/ARCHIVE/ ] && mkdir -p ${script_home}/ARCHIVE/
-[ $? -ne 0 ] && ( echo "ERROR: Unable to create archive home."; exit 1)
+if [ ! -d ${script_home}/ARCHIVE/ ] ; then
+        mkdir -p ${script_home}/ARCHIVE/
+        if [ $? -ne 0 ] ; then
+                echo "ERROR: Unable to create archive home."
+                exit 1
+        fi
+fi
 mkdir -p ${script_home}/ARCHIVE/${scenro}_${today_dt}
-[ $? -ne 0 ] && ( echo "ERROR: Unable to create scanario archive home."; exit 1)
+if [ $? -ne 0 ] ; then
+        echo "ERROR: Unable to create scanario archive home."
+        exit 1
+fi
 
 
 mv ${script_home}/run_upgrade_${scenro}.sh ${script_home}/ARCHIVE/${scenro}_${today_dt}/
