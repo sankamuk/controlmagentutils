@@ -1,8 +1,9 @@
 #!/bin/bash
 #==================================================================================================================================
 # Usage  : Script to extract currently running robot status for a scenario.
-# Version: 1.0
-# Date   : 21-03-2018
+# Version: 1.2 - Module Upgrade Option
+#          1.1 - Initial Stable Version
+# Date   : 16-04-2018
 # Author : Sankar Mukherjee
 #==================================================================================================================================
 

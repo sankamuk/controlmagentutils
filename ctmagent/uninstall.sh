@@ -1,8 +1,9 @@
 #!/bin/bash
 #==================================================================================================================================
 # Usage  : Script to uninstall and archive a perticular scenario.
-# Version: 1.0
-# Date   : 21-03-2018
+# Version: 1.2 - Module Upgrade Option
+#          1.1 - Initial Stable Version
+# Date   : 16-04-2018
 # Author : Sankar Mukherjee
 #==================================================================================================================================
 
@@ -22,18 +23,10 @@ fi
 
 echo "Uninstalling, the complete audit will be archived in directory ${script_home}/ARCHIVE/${scenro}_${today_dt}.tar.gz."
 
-if [ ! -d ${script_home}/ARCHIVE/ ] ; then
-        mkdir -p ${script_home}/ARCHIVE/
-        if [ $? -ne 0 ] ; then
-                echo "ERROR: Unable to create archive home."
-                exit 1
-        fi
-fi
+[ ! -d ${script_home}/ARCHIVE/ ] && mkdir -p ${script_home}/ARCHIVE/
+[ $? -ne 0 ] && ( echo "ERROR: Unable to create archive home."; exit 1)
 mkdir -p ${script_home}/ARCHIVE/${scenro}_${today_dt}
-if [ $? -ne 0 ] ; then
-        echo "ERROR: Unable to create scanario archive home."
-        exit 1
-fi
+[ $? -ne 0 ] && ( echo "ERROR: Unable to create scanario archive home."; exit 1)
 
 
 mv ${script_home}/run_upgrade_${scenro}.sh ${script_home}/ARCHIVE/${scenro}_${today_dt}/

@@ -1,8 +1,9 @@
 #!/bin/bash
 #==================================================================================================================================
 # Usage  : Script to upgrade controlM agent in batch. Argument: File with list of agent host to patch.
-# Version: 1.0
-# Date   : 21-03-2018
+# Version: 1.2 - Module Upgrade Option
+#          1.1 - Initial Stable Version
+# Date   : 16-04-2018
 # Author : Sankar Mukherjee
 #==================================================================================================================================
 
@@ -135,13 +136,13 @@ run_action_on_host(){
            else
              echo "[`date`] Agent upgrade successful."
 	     sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "~/upgrade.sh upgrade_module ${agnt_cntl_host} ${run_user} ${run_as}"
-             modl_upg_stat=$?
-	     if [ $modl_upg_stat -eq 0 ] ; then
+	     modl_upg_stat=$?
+             if [ $modl_upg_stat -eq 0 ] ; then
                 echo "[`date`] Module upgrade also successful."
 		echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Success</td><td>Success</td></tr>" >> ${exec_trace}
 	     elif [ $modl_upg_stat -eq 2 ] ; then
                 echo "[`date`] Could not successfully complete, either module upgrade steps/binary not available."
-             	echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Success</td><td>Incomplete</td></tr>" >> ${exec_trace}
+             	echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Success</td><td>Partial Success(Incomplete)</td></tr>" >> ${exec_trace}
              else
 		echo "[`date`] ERROR - Module upgrade failure. Needs attention."
                 echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Success</td><td>Critical Failure</td></tr>" >> ${exec_trace}

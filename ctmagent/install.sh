@@ -1,8 +1,9 @@
 #!/bin/bash 
 #==================================================================================================================================
 # Usage  : Script to install patch and maintain ControlM Upgrade Tool
-# Version: 1.0
-# Date   : 21-03-2018
+# Version: 1.2 - Module Upgrade Option
+#          1.1 - Initial Stable Version
+# Date   : 16-04-2018
 # Author : Sankar Mukherjee
 #==================================================================================================================================
 script_home=$(cd $(dirname $0);pwd)

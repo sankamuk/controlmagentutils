@@ -1,8 +1,9 @@
 #!/bin/sh -x
 #==================================================================================================================================
 # Usage  : Script to patch controlM agent. Platfom: AIX
-# Version: 1.0
-# Date   : 21-03-2018
+# Version: 1.2 - Module Upgrade Option
+#          1.1 - Initial Stable Version
+# Date   : 16-04-2018
 # Author : Sankar Mukherjee
 #==================================================================================================================================
 
@@ -43,6 +44,8 @@ clear_fs(){
         rm -f ${my_home}/setup.sh
         rm -rf ${my_home}/Setup_files
         rm -rf ${my_home}/FORMS
+        rm -rf ${my_home}/EM
+        rm -rf ${my_home}/Documentation
 	rm -rf /var/tmp/${my_name}_CTM_Upgrade
 	sleep 60
 	echo "[`date`] Completed clearing filesystem."
