@@ -56,6 +56,9 @@ Below are the basic advantages that the tool has:
         7. All audit and logs visible and sharable via HTTP Interface thus easy access for the same.
         
         8. Option to use robot execution mode which can upgrade in managable parallel batches from a massive amount of agent upgrade request.
+        9. Supports Control Module upgrade for Agents. Module upgrade requires same configuration like Agent upgrade.
+        
+        10. Module upgrade is a separate atomic operation and reports available seprately thus Agent upgrade success is not affected by Module upgrade.
         
 
 ### 1.3. Quick Installation
@@ -115,9 +118,9 @@ Note: All above operation need root priviledge on the tool host.
 
 The tool is build to migrate your ControlM agents from a centralised server. Thus what you do is to install this tool in a central server. Once installed you then create a migration scenario, a migration scenario is a perticular migration type consists of a perticular source version a destination version. Note in case you have provided the tool a host which doesnot match the correct current version the tool will not migrate the Agent.
 
-Note here its of prime importance to place your central server in a host where it can reach out to all your Agent hosts via SSH, while Agent host can reach your central server via HTTP. This is required because the tool connects to agent hosts via SSH and trigger migration task. While central server orders the action the agent hosts download the binaries required for the migration from the central server via HTTP.
+The tool is build to execute the migration over hundreds or even thousands of agents server, thus the tool has a design to push the maximum computing over to the agent server itself rather than driving the whole process from the central server. The Central control server just initiates and monitors the execution. This architecture keeps the control server free of heavy comutation requirements. But its of prime importance to place your central server in a host where it can reach out to all your Agent hosts via SSH, while Agent host can reach your central server via HTTP. This is required because the tool connects to agent hosts via SSH and trigger migration task. While central server orders the action the agent hosts download the binaries required for the migration from the central server via HTTP.
 
-The central tool host is expected to be Linux and thats a requirement though there is not specific requirement for Agent hosts. In case you have issue in providing a Linux host as a central server, you should atleast make Bash shell available in the host. The requirement is present bacause the setup script is written in bash shell also the installtion steps will varry in case you are not using Linux.
+The central control host is expected to be Linux and thats a requirement though there is not specific requirement for Agent hosts. In case you have issue in providing a Linux host as a central server, you should atleast make Bash shell available in the central control host. The requirement is present bacause the setup script is written in bash shell also the installtion steps will vary in case you are not using Linux.
 
 <img src="images/Achitecture.JPG" height="300">
 
@@ -132,9 +135,15 @@ The tool comes with below list of directory and files and there purpose explaine
 
 [FILE] **install.sh** - This script creates a perticulat migration scenario, as shown above.
 
+[FILE] **uninstall.sh** - This script uninstalls a perticulat migration scenario.
+
+[FILE] **robot.sh** - This is the robot execution script, explained later.
+
+[FILE] **status.sh** - This script helps in validating the status of a perticular robots execution.
+
 [DIRECTORY] **lib** - This directory contains the skeleton scripts which will be used to create specific scripts for a perticular migration scenario.
 
-[FILE] **lib/run_upgrade.sh** - Skeleton migation file, one such file is created per migration. This file is executed with a host file with a list of hostnames to migrate the agents on the hosts.
+[FILE] **lib/run_upgrade_[Migration Scenario].sh** - Skeleton migation file, one such file is created per migration. This file is executed with a host file with a list of hostnames to migrate the agents on the hosts.
 
 [FILE] **lib/upgrade[_patch]_[linux/hpux/aix].sh** - Skeleton migration driver file specific unix flavour, this will be pushed to the host and executed for migration of the Agent on that host.
 
@@ -220,7 +229,13 @@ Also once the main executor completes migrating all host it will reports the ove
 
 ## 3. Limitation and upgrade
 
-Current design of the tool doesnot support non Unix agent upgrade. Thus currently tool doesnot support Windows agent upgrade. In future may be additional component can handle this limitation.
+Few of the limitations to keep in mind:
+
+- Module Current design of the tool doesnot support non Unix agent upgrade. Thus currently tool doesnot support Windows agent upgrade. 
+
+- Control Module supported currently are SAP, Advance File Transfer, Informatica, Hadoop. In case new modules are required to be supported the the tool needs few modification. In case Module present in Agent not regognised the tool keeps the module untouched and reports the same.
+
+In future may be additional component can handle few of the above limitations but not at this current version.
 
 ## 4. Support and managebility
 
