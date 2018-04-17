@@ -54,10 +54,14 @@ mail_report(){
 
 ## Upgrade utility
 run_action_on_host(){
+ set -x
+
  os_type=$1
  host_nm=$2
  run_user=$3
  user_pass=$4
+ agnt_cntl_host=$5
+
  tmp_file=${log_home}/run_action_on_host.${host_nm}.${run_user}.${today_dt}.tmp.$$
  echo "[`date`] Check agent configuration status for ${host_nm} with user ${run_user}."
 
@@ -68,10 +72,9 @@ run_action_on_host(){
  else
   agnt_usr=$(grep "Agent User Name" ${tmp_file} | awk -F":" '{ print $2 }' | xargs)
   agnt_vsn=$(grep "Agent Version" ${tmp_file} | awk -F":" '{ print $2 }' | xargs)
-  agnt_cntl_host=$(grep "Authorized Servers Host Names" ${tmp_file} | awk -F":" '{ print $2 }' | xargs)
   run_as=$(grep "Agent Listener" ${tmp_file} | awk -F"(" '{ print $1 }' | awk -F"Running as" '{ print $2 }' | xargs)
   agnt_lnr_stat=$(grep "Agent Listener" ${tmp_file} | awk -F":" '{ print $2 }' | grep -q "Not running"; echo $?)
-  agnt_trc_stat=$(grep "Agent Tracker" ${tmp_file} | awk -F":" '{ print $2 }' | grep -q "Not running"; echo $?)
+  agnt_trc_stat=$(grep "Agent Tracker " ${tmp_file} | awk -F":" '{ print $2 }' | grep -q "Not running"; echo $?)
   rm -f ${tmp_file}
   if [ "$agnt_usr" != "${run_user}" ] ; then
    echo "[`date`] Agent not configured with this user."
@@ -144,9 +147,21 @@ run_action_on_host(){
                 echo "[`date`] Could not successfully complete, either module upgrade steps/binary not available."
              	echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Success</td><td>Partial Success(Incomplete)</td></tr>" >> ${exec_trace}
              else
-		echo "[`date`] ERROR - Module upgrade failure. Needs attention."
-                echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Success</td><td>Critical Failure</td></tr>" >> ${exec_trace}
-		mail_report "MODULE" "${host_nm}@@@${run_user}"
+                sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "~/upgrade.sh is_started ${agnt_cntl_host} ${run_user} ${run_as}"
+                if [ $? -ne 0 ] ; then
+                  sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "~/upgrade.sh start_agent ${agnt_cntl_host} ${run_user} ${run_as}"
+                  if [ $? -ne 0 ] ; then
+                    echo "[`date`] ERROR - Module upgrade failure. Needs attention."
+                    echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Success</td><td>Critical Failure</td></tr>" >> ${exec_trace}
+                    mail_report "MODULE" "${host_nm}@@@${run_user}"
+                  else
+                    echo "[`date`] ERROR - Module upgrade failure. But agent healthy."
+                    echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Success</td><td>Failure</td></tr>" >> ${exec_trace}
+                  fi
+                else
+                  echo "[`date`] ERROR - Module upgrade failure. But agent healthy."
+                  echo "<tr><td>${host_nm}</td><td>${os_type}</td><td>${run_user}</td><td>Success</td><td>Failure</td></tr>" >> ${exec_trace}
+                fi
              fi
            fi
          fi
@@ -197,13 +212,15 @@ echo "<th>Host</th><th>OS</th><th>User</th><th>Upgrade Status</th><th>Module Upg
 for host_name in $(cat ${host_file})
 do
 	echo "[`date`] [${my_pid}] Starting to work with host -$host_name."
+	auth_serv=$(basename ${host_file} | awk -F"_" '{ print $1 }')
 	hst_log_file=${log_home}/ctmagent_upgrade_${my_pid}_${host_name}_${today_dt}.log
 	echo "[`date`] [${my_pid}] Checking setup with user - _@@@CTM_USER_NM@@@_."
         os_type=`sshpass -p "@@@CTM_USER_PASSWD@@@" ssh -o StrictHostKeyChecking=no _@@@CTM_USER_NM@@@_@${host_name} "uname"`
 	if [ $? -eq 0 ] ; then
-		echo "[`date`] [${my_pid}] Successfully tested host access. Executing upgrade action on $os_type host "$host_name" with user _@@@CTM_USER_NM@@@_."
-		run_action_on_host "$os_type" "$host_name" "_@@@CTM_USER_NM@@@_" "@@@CTM_USER_PASSWD@@@" > ${hst_log_file} 2>&1
+		echo "[`date`] [${my_pid}] Upgrade action on $os_type host "$host_name" for authserver $auth_serv with user _@@@CTM_USER_NM@@@_."
+		touch ${hst_log_file}
 		chmod a+r ${hst_log_file}
+		run_action_on_host "$os_type" "$host_name" "_@@@CTM_USER_NM@@@_" "@@@CTM_USER_PASSWD@@@" "${auth_serv}" > ${hst_log_file} 2>&1
 		echo "[`date`] [${my_pid}] Completed action."
 	else
                 echo "[`date`] [${my_pid}] ERROR - Unable to connect to host "$host_name" with user _@@@CTM_USER_NM@@@_."

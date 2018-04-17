@@ -23,16 +23,27 @@ fi
 
 echo "Uninstalling, the complete audit will be archived in directory ${script_home}/ARCHIVE/${scenro}_${today_dt}.tar.gz."
 
-[ ! -d ${script_home}/ARCHIVE/ ] && mkdir -p ${script_home}/ARCHIVE/
-[ $? -ne 0 ] && ( echo "ERROR: Unable to create archive home."; exit 1)
+if [ ! -d ${script_home}/ARCHIVE/ ] ; then
+	mkdir -p ${script_home}/ARCHIVE/
+	if [ $? -ne 0 ] ; then
+		echo "ERROR: Unable to create archive home."
+		exit 1
+	fi
+fi
 mkdir -p ${script_home}/ARCHIVE/${scenro}_${today_dt}
-[ $? -ne 0 ] && ( echo "ERROR: Unable to create scanario archive home."; exit 1)
+if [ $? -ne 0 ] ; then
+	echo "ERROR: Unable to create scanario archive home."
+	exit 1
+fi
 
 
 mv ${script_home}/run_upgrade_${scenro}.sh ${script_home}/ARCHIVE/${scenro}_${today_dt}/
 
 mkdir -p ${script_home}/ARCHIVE/${scenro}_${today_dt}/log
 mv ${script_home}/log/${scenro} ${script_home}/ARCHIVE/${scenro}_${today_dt}/log/${scenro}
+
+mkdir -p ${script_home}/ARCHIVE/${scenro}_${today_dt}/DB/
+mv ${script_home}/DB/${scenro} ${script_home}/ARCHIVE/${scenro}_${today_dt}/DB/${scenro}
 
 mkdir -p ${script_home}/ARCHIVE/${scenro}_${today_dt}/${scenro}/aix/ ${script_home}/ARCHIVE/${scenro}_${today_dt}/${scenro}/linux/ ${script_home}/ARCHIVE/${scenro}_${today_dt}/${scenro}/hpux/
 mv ${script_home}/${scenro}/aix/upgrade.* ${script_home}/ARCHIVE/${scenro}_${today_dt}/${scenro}/aix/
@@ -41,6 +52,9 @@ mv ${script_home}/${scenro}/linux/upgrade.* ${script_home}/ARCHIVE/${scenro}_${t
 
 cd ${script_home}/ARCHIVE/
 tar -zcvf ${scenro}_${today_dt}.tar.gz ${scenro}_${today_dt} 
-[ $? -eq 0 ] && ( rm -rf ${script_home}/${scenro} ; rm -rf ${script_home}/ARCHIVE/${scenro}_${today_dt} )
+if [ $? -eq 0 ] ; then 
+	rm -rf ${script_home}/${scenro}
+	rm -rf ${script_home}/ARCHIVE/${scenro}_${today_dt}
+fi
 
 echo "Completed uninstalling."
