@@ -99,7 +99,7 @@ run_action_on_host(){
        dwn_exec_stat=$?
        ;;
      AIX)
-       sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "/usr/opt/perl5/bin/lwp-download http://${bin_host}/${download_home}/hpux/upgrade.sh ~/upgrade.sh"
+       sshpass -p "${user_pass}" ssh -o StrictHostKeyChecking=no ${run_user}@${host_nm} "/usr/opt/perl5/bin/lwp-download http://${bin_host}/${download_home}/aix/upgrade.sh ~/upgrade.sh"
        dwn_exec_stat=$?
        ;;
      esac
