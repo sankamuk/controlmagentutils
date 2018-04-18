@@ -154,7 +154,7 @@ Note: Once you start creating new migration scenario the structure will be added
 
 ### 2.2. Execution Process
 
-The execution process require creating a Host file. A host file is simply a list of host requested for migration using a perticular migration scenario.
+The execution process require creating a Host file with name of your ControlM Authorized Servers to which your agents you are going to upgeade is fedarated to. Rest a host file is simply a list of host requested for migration using a perticular migration scenario.
 
 Sample host file
 
