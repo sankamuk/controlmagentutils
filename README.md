@@ -158,7 +158,7 @@ The execution process require creating a Host file with name of your ControlM Au
 
 Sample host file
 
-<img src="images/Host.jpg" height="100">
+<img src="images/HostFile.jpg" height="100">
 
 Once host file is created you are ready to execute a perticular migration scenario. Shown below is a sample execution.
 
