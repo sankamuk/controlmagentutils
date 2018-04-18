@@ -56,6 +56,7 @@ Below are the basic advantages that the tool has:
         7. All audit and logs visible and sharable via HTTP Interface thus easy access for the same.
         
         8. Option to use robot execution mode which can upgrade in managable parallel batches from a massive amount of agent upgrade request.
+        
         9. Supports Control Module upgrade for Agents. Module upgrade requires same configuration like Agent upgrade.
         
         10. Module upgrade is a separate atomic operation and reports available seprately thus Agent upgrade success is not affected by Module upgrade.
@@ -81,7 +82,7 @@ The tool has a extremely simple install process. It comprosed of three steps to 
         
         chown -R apache:apache /var/www/html/ctmagent
         
-        chmod a+rx /var/www/html/ctmagent/install.sh
+        chmod a+rx /var/www/html/ctmagent/*.sh
         
         
 3. Configure the tool for a specific migration scenario by running the install.sh.
