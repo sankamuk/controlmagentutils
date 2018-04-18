@@ -23,7 +23,7 @@ read -p "Please provide the current version: " cur_vern
 read -p "Please provide the upgraded version id(This string will be searched in version to validate upgradation): " upgrad_id
 read -p "Please provide the HP Unix Upgrade binary location(Should be uploaded in this host): " upgd_bin_hp
 [ ! -f $upgd_bin_hp ] && ( echo "ERROR: Binary not accessable."; exit 1 )
-read -p "Please provide the Linux Upgrade binary location(Should be uploaded in this host): " upgd_bin_lnx
+read -p "Please provide the Linux(x86_64) Upgrade binary location(Should be uploaded in this host): " upgd_bin_lnx
 [ ! -f $upgd_bin_lnx ] && ( echo "ERROR: Binary not accessable."; exit 1 )
 read -p "Please provide the AIX Upgrade binary location(Should be uploaded in this host): " upgd_bin_aix
 [ ! -f $upgd_bin_aix ] && ( echo "ERROR: Binary not accessable."; exit 1 )
@@ -45,7 +45,7 @@ if [ "$is_patch" == "Y" -o "$is_patch" == "y" ] ; then
 	read -p "Please provide the HP Unix patch binary location(Should be uploaded in this host): " patch_bin_hp
 	[ ! -f $patch_bin_hp ] && ( echo "ERROR: Binary not accessable."; exit 1 )
 	patch_bin_hp_hash=$(cksum $patch_bin_hp | awk '{ print $1 }')
-        read -p "Please provide the Linux patch binary location(Should be uploaded in this host): " patch_bin_lnx
+        read -p "Please provide the Linux(x86_64) patch binary location(Should be uploaded in this host): " patch_bin_lnx
         [ ! -f $patch_bin_lnx ] && ( echo "ERROR: Binary not accessable."; exit 1 )
         patch_bin_lnx_hash=$(cksum $patch_bin_lnx | awk '{ print $1 }')
         read -p "Please provide the AIX patch binary location(Should be uploaded in this host): " patch_bin_aix
@@ -67,7 +67,7 @@ if [ "$is_module" == "Y" -o "$is_module" == "y" ] ; then
 		read -p "Please provide the HP Unix module upgrade binary location(Should be uploaded in this host): " upgd_bin_hp_aft
 		[ ! -f $upgd_bin_hp_aft ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                 upgd_bin_hash_hp_aft=$(cksum $upgd_bin_hp_aft | awk '{ print $1 }')
-                read -p "Please provide the Linux module upgrade binary location(Should be uploaded in this host): " upgd_bin_linux_aft
+                read -p "Please provide the Linux(x86_64) module upgrade binary location(Should be uploaded in this host): " upgd_bin_linux_aft
                 [ ! -f $upgd_bin_linux_aft ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                 upgd_bin_hash_linux_aft=$(cksum $upgd_bin_linux_aft | awk '{ print $1 }')
                 read -p "Please provide the AIX module upgrade binary location(Should be uploaded in this host): " upgd_bin_aix_aft
@@ -82,7 +82,7 @@ if [ "$is_module" == "Y" -o "$is_module" == "y" ] ; then
 			read -p "Please provide the HP Unix patch binary location for AFT(Should be uploaded in this host): " patch_bin_hp_aft
                         [ ! -f $patch_bin_hp_aft ] && ( echo "ERROR: Binary not accessable."; exit 1 )
 			patch_bin_hash_hp_aft=$(cksum $patch_bin_hp_aft | awk '{ print $1 }')
-                        read -p "Please provide the Linux patch binary location for AFT(Should be uploaded in this host): " patch_bin_linux_aft
+                        read -p "Please provide the Linux(x86_64) patch binary location for AFT(Should be uploaded in this host): " patch_bin_linux_aft
                         [ ! -f $patch_bin_linux_aft ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                         patch_bin_hash_linux_aft=$(cksum $patch_bin_linux_aft | awk '{ print $1 }')
 			read -p "Please provide the AIX patch binary location for AFT(Should be uploaded in this host): " patch_bin_aix_aft
@@ -101,7 +101,7 @@ if [ "$is_module" == "Y" -o "$is_module" == "y" ] ; then
                 read -p "Please provide the HP Unix module upgrade binary location(Should be uploaded in this host): " upgd_bin_hp_sap
                 [ ! -f $upgd_bin_hp_sap ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                 upgd_bin_hash_hp_sap=$(cksum $upgd_bin_hp_sap | awk '{ print $1 }')
-                read -p "Please provide the Linux module upgrade binary location(Should be uploaded in this host): " upgd_bin_linux_sap
+                read -p "Please provide the Linux(x86_64) module upgrade binary location(Should be uploaded in this host): " upgd_bin_linux_sap
                 [ ! -f $upgd_bin_linux_sap ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                 upgd_bin_hash_linux_sap=$(cksum $upgd_bin_linux_sap | awk '{ print $1 }')
                 read -p "Please provide the AIX module upgrade binary location(Should be uploaded in this host): " upgd_bin_aix_sap
@@ -116,7 +116,7 @@ if [ "$is_module" == "Y" -o "$is_module" == "y" ] ; then
                         read -p "Please provide the HP Unix patch binary location for SAP(Should be uploaded in this host): " patch_bin_hp_sap
                         [ ! -f $patch_bin_hp_sap ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                         patch_bin_hash_hp_sap=$(cksum $patch_bin_hp_sap | awk '{ print $1 }')
-                        read -p "Please provide the Linux patch binary location for SAP(Should be uploaded in this host): " patch_bin_linux_sap
+                        read -p "Please provide the Linux(x86_64) patch binary location for SAP(Should be uploaded in this host): " patch_bin_linux_sap
                         [ ! -f $patch_bin_linux_sap ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                         patch_bin_hash_linux_sap=$(cksum $patch_bin_linux_sap | awk '{ print $1 }')
                         read -p "Please provide the AIX patch binary location for SAP(Should be uploaded in this host): " patch_bin_aix_sap
@@ -135,7 +135,7 @@ if [ "$is_module" == "Y" -o "$is_module" == "y" ] ; then
                 read -p "Please provide the HP Unix module upgrade binary location(Should be uploaded in this host): " upgd_bin_hp_inform
                 [ ! -f $upgd_bin_hp_inform ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                 upgd_bin_hash_hp_inform=$(cksum $upgd_bin_hp_inform | awk '{ print $1 }')
-                read -p "Please provide the Linux module upgrade binary location(Should be uploaded in this host): " upgd_bin_linux_inform
+                read -p "Please provide the Linux(x86_64) module upgrade binary location(Should be uploaded in this host): " upgd_bin_linux_inform
                 [ ! -f $upgd_bin_linux_inform ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                 upgd_bin_hash_linux_inform=$(cksum $upgd_bin_linux_inform | awk '{ print $1 }')
                 read -p "Please provide the AIX module upgrade binary location(Should be uploaded in this host): " upgd_bin_aix_inform
@@ -150,7 +150,7 @@ if [ "$is_module" == "Y" -o "$is_module" == "y" ] ; then
                         read -p "Please provide the HP Unix patch binary location for INFORMATICA(Should be uploaded in this host): " patch_bin_hp_inform
                         [ ! -f $patch_bin_hp_inform ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                         patch_bin_hash_hp_inform=$(cksum $patch_bin_hp_inform | awk '{ print $1 }')
-                        read -p "Please provide the Linux patch binary location for INFORMATICA(Should be uploaded in this host): " patch_bin_linux_inform
+                        read -p "Please provide the Linux(x86_64) patch binary location for INFORMATICA(Should be uploaded in this host): " patch_bin_linux_inform
                         [ ! -f $patch_bin_linux_inform ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                         patch_bin_hash_linux_inform=$(cksum $patch_bin_linux_inform | awk '{ print $1 }')
                         read -p "Please provide the AIX patch binary location for INFORMATICA(Should be uploaded in this host): " patch_bin_aix_inform
@@ -169,7 +169,7 @@ if [ "$is_module" == "Y" -o "$is_module" == "y" ] ; then
                 read -p "Please provide the HP Unix module upgrade binary location(Should be uploaded in this host): " upgd_bin_hp_hdp
                 [ ! -f $upgd_bin_hp_hdp ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                 upgd_bin_hash_hp_hdp=$(cksum $upgd_bin_hp_hdp | awk '{ print $1 }')
-                read -p "Please provide the Linux module upgrade binary location(Should be uploaded in this host): " upgd_bin_linux_hdp
+                read -p "Please provide the Linux(x86_64) module upgrade binary location(Should be uploaded in this host): " upgd_bin_linux_hdp
                 [ ! -f $upgd_bin_linux_hdp ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                 upgd_bin_hash_linux_hdp=$(cksum $upgd_bin_linux_hdp | awk '{ print $1 }')
                 read -p "Please provide the AIX module upgrade binary location(Should be uploaded in this host): " upgd_bin_aix_hdp
@@ -184,7 +184,7 @@ if [ "$is_module" == "Y" -o "$is_module" == "y" ] ; then
                         read -p "Please provide the HP Unix patch binary location for HADOOP(Should be uploaded in this host): " patch_bin_hp_hdp
                         [ ! -f $patch_bin_hp_hdp ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                         patch_bin_hash_hp_hdp=$(cksum $patch_bin_hp_hdp | awk '{ print $1 }')
-                        read -p "Please provide the Linux patch binary location for HADOOP(Should be uploaded in this host): " patch_bin_linux_hdp
+                        read -p "Please provide the Linux(x86_64) patch binary location for HADOOP(Should be uploaded in this host): " patch_bin_linux_hdp
                         [ ! -f $patch_bin_linux_hdp ] && ( echo "ERROR: Binary not accessable."; exit 1 )
                         patch_bin_hash_linux_hdp=$(cksum $patch_bin_linux_hdp | awk '{ print $1 }')
                         read -p "Please provide the AIX patch binary location for HADOOP(Should be uploaded in this host): " patch_bin_aix_hdp

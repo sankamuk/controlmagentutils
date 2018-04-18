@@ -64,6 +64,13 @@ validation_agent_config(){
                 echo "[`date`] ERROR - Unable to find controlm status check  script."
                 exit 1
         fi
+
+	if [ $(uname -p | grep -q "x86_64" ; echo $?) -ne 0 ] 
+	then
+		echo "[`date`] ERROR - Host is not a 64 Bit Architiceture, thus tool not applicable. Host Archtecture $(uname -p)."
+                exit 1
+        fi
+
 	ag_diag_comm > ${status_file}
 
         tot_auth_stat=`grep "Authorized Servers Host Names" ${status_file} | awk -F":" '{ print $2 }' | awk -F":" '{ print NF  }'`
