@@ -1025,10 +1025,10 @@ case ${todo} in
 		stop_agent	
 		# Updating agent
 		agent_upgrade
-		# Patch agent
-		[ $do_patch -eq 0 ] && agent_patch
-                # Update Agent Protocol Version
+		# Update Agent Protocol Version
                 [ $do_proto_update -eq 0 ] && update_proto
+		# Patch agent
+		[ $do_patch -eq 0 ] && agent_patch              
 		# Starting up agent
 		start_agent
 		;;
