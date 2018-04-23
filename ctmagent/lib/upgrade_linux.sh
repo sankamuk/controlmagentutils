@@ -73,7 +73,7 @@ validation_agent_config(){
 
 	ag_diag_comm > ${status_file}
 
-        tot_auth_stat=`grep "Authorized Servers Host Names" ${status_file} | awk -F":" '{ print $2 }' | awk -F":" '{ print NF  }'`
+        tot_auth_stat=`grep "Authorized Servers Host Names" ${status_file} | awk -F":" '{ print $2 }' | awk '{ print NF  }'`
         srv_stat=`grep "Server Host Name" ${status_file} | awk -F":" '{ print $2 }' | tr [a-z] [A-Z] | grep -iq "$controlmsrv"; echo $?`
         auth_stat=`grep "Authorized Servers Host Names" ${status_file} | awk -F":" '{ print $2 }' | tr [a-z] [A-Z] | grep -iq "$controlmsrv"; echo $?`
 	unx_png=`grep "Unix Ping to Server Platform" ${status_file} | awk -F":" '{ print $2 }' | grep -iq "Succeeded"; echo $?`
@@ -394,21 +394,66 @@ agent_patch(){
         echo "[`date`] Starting to execute patch."
 	dtval=`date +%F-%H-%M`
         pch_cmmd_file=/tmp/ctmagent_patch_${dtval}_cmd.tmp.$$
+	pstatus_install=0
+
 	${my_home}/${patch_bin} -s > ${pch_cmmd_file} 2>&1        
 
         if [ $? -ne 0 ]
         then
                 echo "[`date`] ERROR - Upgradation failed."
-		clear_fs
-                exit 1
+                pstatus_install=1
         fi
         grep -i "completed successfully" ${pch_cmmd_file} | grep -i "installation"
         if [ $? -ne 0 ]
         then
                 echo "[`date`] ERROR - Patching failed. Not stated completion in logs."
-		clear_fs
-                exit 1
+                pstatus_install=1
         fi
+
+        if [ $pstatus_install -ne 0 ]
+        then
+               	echo "[`date`] ERROR - Patching failed. Retry with different binary extract path is in progress."
+               	dtval=`date +%F-%H-%M`
+               	pch_cmmd_file=/tmp/ctmagent_patch_${dtval}_cmd.tmp.$$
+               	path_tmp_loc=/tmp/TMP
+               	if [ `df -Pk ${my_home} | grep -v Available | awk '{ print $4 }'` -gt `df -Pk /var/tmp | grep -v Available | awk '{ print $4 }'` ]
+               	then
+                       path_tmp_loc=${my_home}/TMP
+               	else
+                       path_tmp_loc=/var/tmp/TMP
+               	fi
+               	mkdir -p ${path_tmp_loc}
+               	if [ $? -ne 0 ]
+               	then
+                       echo "[`date`] ERROR - Failed to create alternate extract directory for Patch."
+                       clear_fs
+                       rm -rf ${path_tmp_loc}
+                       exit 1
+               	fi
+
+               	echo "[`date`] Trying to execute patch with target extract directory set to $path_tmp_loc."
+
+               	${my_home}/${patch_bin} -d"${path_tmp_loc}" -s > ${pch_cmmd_file} 2>&1
+
+               	if [ $? -ne 0 ]
+               	then
+                       echo "[`date`] ERROR - Retry Patching failed."
+                       clear_fs
+                       rm -rf ${path_tmp_loc}
+                       exit 1
+               	fi
+               	grep -i "completed successfully" ${pch_cmmd_file} | grep -i "installation"
+               	if [ $? -ne 0 ]
+               	then
+                       echo "[`date`] ERROR - Retry failed. Not stated completion in logs."
+                       rm -rf ${path_tmp_loc}
+                       clear_fs
+                       exit 1
+               	fi
+		rm -rf ${path_tmp_loc}	
+        fi
+
+
         ag_diag_comm | grep "Agent Version" | grep "${patch_final_verion}"
         if [ $? -ne 0 ]
         then
@@ -1025,10 +1070,10 @@ case ${todo} in
 		stop_agent	
 		# Updating agent
 		agent_upgrade
-		# Update Agent Protocol Version
+                # Update Agent Protocol Version
                 [ $do_proto_update -eq 0 ] && update_proto
 		# Patch agent
-		[ $do_patch -eq 0 ] && agent_patch              
+		[ $do_patch -eq 0 ] && agent_patch
 		# Starting up agent
 		start_agent
 		;;
