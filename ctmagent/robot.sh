@@ -154,7 +154,7 @@ do
 				exit 0
 			else
 				echo "Initiating new batch with host file $nxt_batch." 
-				${script_home}/run_upgrade_${scenro}.sh $nxt_batch 
+				${script_home}/run_upgrade_${scenro}.sh $nxt_batch &
 			fi
 		fi
 	fi
