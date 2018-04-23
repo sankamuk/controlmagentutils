@@ -180,13 +180,14 @@ Robot script is your solution to this problem. Below are the design goals for th
 
 Robot script execution process
 
-$ robot.sh [ OPTION_1 ] [ OPTION_2 ] [ OPTION_3 ]
+$ robot.sh -s [ OPTION_1 ] -h [ OPTION_2 ] -b [ OPTION_3 ]
 
 OPTION_1 : Migration Scenario
 
-OPTION_2 : Number of parallel executor to use for executing the batches
+OPTION_2 : Host file
 
-OPTION_3 : Host file
+OPTION_3 : Number of parallel executor to use for executing the batches
+
 
 ***Note*** to configure batch size you need to update the variable "host_in_batch" in robot.sh script.
 
